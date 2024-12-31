@@ -4,7 +4,8 @@ let s:opt = {
     \ 'out_cb': 'LspStdout',
     \ 'err_cb': 'LspStderr',
     \ 'noblock': 1,
-    \ 'mode': 'lsp',
+    \ 'in_mode': 'lsp',
+    \ 'out_mode': 'lsp',
   \}
 
 function LspStart()
@@ -15,17 +16,54 @@ endfunction
 
 function LspStop()
   call job_stop(b:job_id)
-  echo "done"
+  echom"done"
 endfunction
 
-
-function! LspExit(job_id, exit_code)
-  echo 'Exit'
-  echo 'LSP exited with status: ' . a:exit_code
+function! LspStdout(channel, data) abort
+  echom 'Out'
+  echom a:channel
+  echom a:data
 endfunction
+
+function! LspStderr(channel, data) abort
+  echom 'Error'
+  echom a:data
+endfunction
+
+function! LspExit(job_id, exit_code) abort
+  echom'Exit'
+  echom'LSP exited with status: ' . a:exit_code
+endfunction
+
+function! LspInit() abort
+  echom 'initialize'
+  let request = {
+    \   'method': 'initialize',
+    \   'params': {
+    \     'processId': getpid(),
+    \     'clientInfo': { 'name': 'lsp-joel', 'version':'0' },
+    \     'capabilities': {'textDocument': {'hover':{'dynamicRegistration': v:false}}},
+    \     'rootUri': '/home/alba/proyects/lsp/',
+    \     'rootPath': '/home/alba/proyects/lsp/',
+    \     'trace': 'off',
+    \   },
+  \ }
+  call ch_sendexpr(b:channel, request, {'callback':'InitCallback'})
+endfunction
+
+function! InitCallback(channel,response) abort
+  echom 'Callback'
+  echom a:channel
+  echom a:response
+  if has_key(a:response,'result') && has_key(a:response['result'],'capabilities')
+    call ch_sendexpr(b:channel, {'method':'initialized', 'params':{}})
+  endif
+endfunction
+
 
 
 call LspStart()
-echo b:info
-call LspStop()
+call LspInit()
+
+"call LspStop()
 
