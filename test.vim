@@ -1,3 +1,5 @@
+"notes: Everithing is mocked, open tpyscript/src/main as bufer number 2.
+
 let s:cmd = ['typescript-language-server','--stdio']
 let s:opt = {
     \ 'exit_cb': 'LspExit',
@@ -7,6 +9,22 @@ let s:opt = {
     \ 'in_mode': 'lsp',
     \ 'out_mode': 'lsp',
   \}
+
+let s:capabilities = {
+  \'workspace' : {},
+  \'textDocument': {
+    \'hover': {
+      \'dynamicRegistration': v:false,
+      \'contentFormat': ['markdown','plaintext']
+    \},
+    \'syncrhonization': {
+      \'dynamicRegistration': v:false,
+      \'willSaveWaitUntil':v:false,
+      \'willSave': v:false,
+      \'didSave': v:true
+    \},
+  \},
+\}
 
 function LspStart()
   let b:job_id = job_start(s:cmd,s:opt)
@@ -42,9 +60,8 @@ function! LspInit() abort
     \   'params': {
     \     'processId': getpid(),
     \     'clientInfo': { 'name': 'lsp-joel', 'version':'0' },
-    \     'capabilities': {'textDocument': {'hover':{'dynamicRegistration': v:false}}},
-    \     'rootUri': '/home/alba/proyects/lsp/',
-    \     'rootPath': '/home/alba/proyects/lsp/',
+    \     'capabilities': s:capabilities,
+    \     'rootPath': '/home/alba/proyects/lsp/typescript/',
     \     'trace': 'off',
     \   },
   \ }
@@ -61,9 +78,47 @@ function! InitCallback(channel,response) abort
 endfunction
 
 
+function Hover() abort
+  let l:hover = {
+    \ 'method':'textDocument/hover',
+    \ 'params': {
+    \ 'textDocument': {'uri': 'file:///home/alba/proyects/lsp/typescript/src/main.ts'},
+    \ 'position': {'line': 2,
+        \ 'character': 15
+      \}
+    \ }
+  \ }
+  call ch_sendexpr(b:channel,l:hover,{'callback':'HoverCallback'})
+endfunction 
 
-call LspStart()
-call LspInit()
+function! HoverCallback(channel,response) abort
+  echom 'HoverCallback'
+  echom a:response
+endfunction
 
+function DidOpen() abort
+  let l:didOpen = {
+    \'method':'textDocument/didOpen',
+    \'params':{
+      \'textDocument': {
+        \'uri':  'file:///home/alba/proyects/lsp/typescript/src/main.ts',
+        \'languageId': 'typescript', 
+        \'version': 1,
+        \'text': Get_Lines(),
+      \},
+    \},
+  \}
+  call ch_sendexpr(b:channel,l:didOpen)
+endfunction
+
+"call LspStart()
+"call LspInit()
+"call DidOpen()
+"call Hover()
 "call LspStop()
+"
 
+function! Get_Lines() abort
+    let l:lines = getbufline(2, 1, '$')
+    return join(l:lines, "\n")
+endfunction

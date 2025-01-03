@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "lib": ["dom", "ES2022"],
+    "strict": true,
+    "sourceMap": true,
+    "allowSyntheticDefaultImports": false,
+    "allowUnreachableCode": false,
+    "esModuleInterop": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noUncheckedIndexedAccess": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "baseUrl": ".",
+    "module": "commonjs",
+    "moduleResolution": "node10",
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "lib",
+    "skipLibCheck": true
+  },
+  "include": ["index.ts", "src"],
+  "exclude": ["node_modules", "lib"]
+}
