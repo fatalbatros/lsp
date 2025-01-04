@@ -15,7 +15,7 @@ let s:capabilities = {
   \'textDocument': {
     \'hover': {
       \'dynamicRegistration': v:false,
-      \'contentFormat': ['markdown','plaintext']
+      \'contentFormat': ['plaintext']
     \},
     \'syncrhonization': {
       \'dynamicRegistration': v:false,
@@ -61,7 +61,8 @@ function! LspInit() abort
     \     'processId': getpid(),
     \     'clientInfo': { 'name': 'lsp-joel', 'version':'0' },
     \     'capabilities': s:capabilities,
-    \     'rootPath': '/home/alba/proyects/lsp/typescript/',
+    \     'rootPath':expand("%:p:h"),
+    \     'rootURI':'file://'.expand("%:p:h"),
     \     'trace': 'off',
     \   },
   \ }
@@ -82,9 +83,9 @@ function Hover() abort
   let l:hover = {
     \ 'method':'textDocument/hover',
     \ 'params': {
-    \ 'textDocument': {'uri': 'file:///home/alba/proyects/lsp/typescript/src/main.ts'},
-    \ 'position': {'line': 2,
-        \ 'character': 15
+    \ 'textDocument': {'uri': 'file://' . expand("%:p")},
+    \ 'position': {'line': getpos('.')[1]-1,
+        \ 'character': getpos('.')[2],
       \}
     \ }
   \ }
@@ -94,6 +95,16 @@ endfunction
 function! HoverCallback(channel,response) abort
   echom 'HoverCallback'
   echom a:response
+  let b:response = a:response
+  let l:hover_text = a:response['result']['contents']['value']
+  let l:options = {
+    \'border':[1,1,1,1],
+    \'highlight':'Normal',
+    \'borderchars':['-','|','-','|','+','+','+','+'],
+    \'moved':'word'
+  \}
+  let l:formated_text =  split(l:hover_text, '\r\n\|\r\|\n', v:true)
+  call popup_atcursor(l:formated_text,l:options)
 endfunction
 
 function DidOpen() abort
@@ -101,7 +112,7 @@ function DidOpen() abort
     \'method':'textDocument/didOpen',
     \'params':{
       \'textDocument': {
-        \'uri':  'file:///home/alba/proyects/lsp/typescript/src/main.ts',
+        \'uri':'file://' . expand("%:p"),
         \'languageId': 'typescript', 
         \'version': 1,
         \'text': Get_Lines(),
@@ -119,6 +130,6 @@ endfunction
 "
 
 function! Get_Lines() abort
-    let l:lines = getbufline(2, 1, '$')
+    let l:lines = getbufline(bufnr(), 1, '$')
     return join(l:lines, "\n")
 endfunction
