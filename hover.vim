@@ -30,6 +30,7 @@ function LspStart()
   let b:job_id = job_start(s:cmd,s:opt)
   let b:info = job_info(b:job_id)
   let b:channel = job_getchannel(b:job_id)
+  call Log("Lsp Started",b:info)
 endfunction
 
 function LspStop()
@@ -62,7 +63,7 @@ function! LspInit() abort
     \     'clientInfo': { 'name': 'lsp-joel', 'version':'0' },
     \     'capabilities': s:capabilities,
     \     'rootPath':expand("%:p:h"),
-    \     'rootURI':'file://'.expand("%:p:h"),
+    \     'rootURI':'file://'.expand("%:p:h").'/',
     \     'trace': 'off',
     \   },
   \ }
@@ -70,11 +71,14 @@ function! LspInit() abort
 endfunction
 
 function! InitCallback(channel,response) abort
-  echom 'Callback'
-  echom a:channel
+  echom 'InitCallback'
   echom a:response
   if has_key(a:response,'result') && has_key(a:response['result'],'capabilities')
+    call Log("Lsp Initializated")
     call ch_sendexpr(b:channel, {'method':'initialized', 'params':{}})
+    call Log("Sending Initializated Notification")
+  else
+    call Log("Initialiation Error", b:response)
   endif
 endfunction
 
@@ -120,6 +124,7 @@ function DidOpen() abort
     \},
   \}
   call ch_sendexpr(b:channel,l:didOpen)
+  call Log ('Document Opened', l:didOpen)
 endfunction
 
 "call LspStart()
@@ -132,4 +137,12 @@ endfunction
 function! Get_Lines() abort
     let l:lines = getbufline(bufnr(), 1, '$')
     return join(l:lines, "\n")
+endfunction
+
+
+let g:log_lsp = expand("%:p:h") . '/log.log'
+function! Log(header,...) abort
+    if !empty(g:log_lsp)
+        call writefile([strftime('%Y-%m-%d %T') . ' -> '. a:header .' : '. string(a:000)], g:log_lsp, 'a')
+    endif
 endfunction
