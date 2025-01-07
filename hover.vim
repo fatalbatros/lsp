@@ -14,6 +14,7 @@ endfunction
 function! s:HoverCallback(channel,response) abort
   echom 'HoverCallback'
   echom a:response
+  let g:response = a:response
   let l:hover_text = a:response['result']['contents']['value']
   let l:options = {
     \'border':[1,1,1,1],

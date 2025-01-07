@@ -9,20 +9,20 @@ if !has_key(g:lsp, 'typescript')
 endif
 
 let s:opt = {
-    \ 'exit_cb': 'LspExit',
-    \ 'out_cb': 'LspStdout',
-    \ 'err_cb': 'LspStderr',
-    \ 'noblock': 1,
-    \ 'in_mode': 'lsp',
-    \ 'out_mode': 'lsp',
-  \}
+  \'exit_cb': 'LspExit',
+  \'out_cb': 'LspStdout',
+  \'err_cb': 'LspStderr',
+  \'noblock': 1,
+  \'in_mode': 'lsp',
+  \'out_mode': 'lsp',
+\}
 
 let s:capabilities = {
   \'workspace' : {},
   \'textDocument': {
     \'hover': {
       \'dynamicRegistration': v:false,
-      \'contentFormat': ['plaintext']
+      \'contentFormat': ['plaintext','markdown']
     \},
     \'syncrhonization': {
       \'dynamicRegistration': v:false,
@@ -100,6 +100,7 @@ function! LspInit() abort
 endfunction
 
 function! _initCallback(channel,response) abort
+  let g:init_response = a:response
   if has_key(a:response,'result') && has_key(a:response['result'],'capabilities')
     call Log("Lsp Initializated")
     call ch_sendexpr(a:channel, {'method':'initialized', 'params':{}})
@@ -110,11 +111,12 @@ function! _initCallback(channel,response) abort
 endfunction
 
 function DidOpen() abort
+  let l:uri = 'file://' . expand("%:p")
   let l:didOpen = {
     \'method':'textDocument/didOpen',
     \'params':{
       \'textDocument': {
-        \'uri':'file://' . expand("%:p"),
+        \'uri': l:uri,
         \'languageId': 'typescript', 
         \'version': 1,
         \'text': Get_Lines(),
@@ -122,9 +124,28 @@ function DidOpen() abort
     \},
   \}
   call ch_sendexpr(g:lsp[&filetype]['channel'],l:didOpen)
-  call Log ('Sending /didOpen notification ', l:didOpen)
+  call Log ('Sending /didOpen notification ', l:uri)
+  if !has_key(g:lsp[&filetype],'files')
+    let g:lsp[&filetype]['files'] = {}
+  endif
+  let g:lsp[&filetype]['files'][l:uri] = {'bufer': bufnr(), 'version': 1}
 endfunction
 
+
+function DidClose() abort
+  let l:uri = 'file://' . expand("%:p")
+  let l:didClose = {
+    \'method':'textDocument/didClose',
+    \'params':{
+      \'textDocument': {
+        \'uri': l:uri,
+      \},
+    \},
+  \}
+  call ch_sendexpr(g:lsp[&filetype]['channel'], l:didClose)
+  call Log ('Sending /didClose notification ', l:uri)
+  unlet g:lsp[&filetype]['files'][l:uri]
+endfunction
 "call LspStart()
 "call LspInit()
 "call DidOpen()
@@ -133,14 +154,14 @@ endfunction
 "
 
 function! Get_Lines() abort
-    let l:lines = getbufline(bufnr(), 1, '$')
-    return join(l:lines, "\n")
+  let l:lines = getbufline(bufnr(), 1, '$')
+  return join(l:lines, "\n")
 endfunction
 
 
 let g:log_lsp = expand("%:p:h") . '/log.log'
 function! Log(header,...) abort
-    if !empty(g:log_lsp)
-        call writefile([strftime('%Y-%m-%d %T') . ' -> '. a:header .' : '. string(a:000)], g:log_lsp, 'a')
-    endif
+  if !empty(g:log_lsp)
+    call writefile([strftime('%Y-%m-%d %T') . ' -> '. a:header .' : '. string(a:000)], g:log_lsp, 'a')
+  endif
 endfunction
