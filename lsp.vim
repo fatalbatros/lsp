@@ -34,6 +34,7 @@ let s:capabilities = {
 \}
 
 function! LspStart() abort
+  "start and restart the server
   if !has_key(g:lsp, &filetype)
     echoerr 'Lsp for ' . &filetype . ' not set'
     return
@@ -45,6 +46,7 @@ function! LspStart() abort
       echoerr 'Lsp for ' . &filetype . ' is running'
       return
     else
+      call Log('Stoping Lsp', &filetype)
       call job_stop(g:lsp[&filetype]['job_id'])
     endif
   endif
@@ -54,6 +56,7 @@ function! LspStart() abort
   let job_id = job_start(cmd,s:opt)
   let g:lsp[&filetype]['job_id'] = job_id
   let g:lsp[&filetype]['channel'] = job_getchannel(job_id)
+  let g:lsp[&filetype]['files'] = {}
   call Log("Lsp Started", &filetype, job_id)
   call LspInit()
 endfunction
@@ -108,15 +111,34 @@ function! _initCallback(channel,response) abort
   else
     call Log("Initialiation Error", a:response)
   endif
+"  call AutoFunctions()
+"  call SyncFile()
 endfunction
 
-function DidOpen() abort
+"function! AutoFunctions() abort
+"  execute 'au filetype ' . &filetype . ' call SyncFile()'
+"endfunction
+
+function! SyncFile() abort
+"this sync should change for a more optimal function using the didChange
+"request/response of the lsp. At the moment if the buffer is flaged as
+"changed (respect of the file in disc) the sync functions sends all the buffer
+"to the server each time the client wants a hover. 
   let l:uri = 'file://' . expand("%:p")
+  if !has_key(g:lsp[&filetype]['files'], l:uri)
+    call DidOpen(l:uri)
+  elseif &modified
+    call DidClose(l:uri)
+    call DidOpen(l:uri)
+  endif
+endfunction
+
+function! DidOpen(uri) abort
   let l:didOpen = {
     \'method':'textDocument/didOpen',
     \'params':{
       \'textDocument': {
-        \'uri': l:uri,
+        \'uri': a:uri,
         \'languageId': 'typescript', 
         \'version': 1,
         \'text': Get_Lines(),
@@ -124,34 +146,25 @@ function DidOpen() abort
     \},
   \}
   call ch_sendexpr(g:lsp[&filetype]['channel'],l:didOpen)
-  call Log ('Sending /didOpen notification ', l:uri)
-  if !has_key(g:lsp[&filetype],'files')
-    let g:lsp[&filetype]['files'] = {}
-  endif
-  let g:lsp[&filetype]['files'][l:uri] = {'bufer': bufnr(), 'version': 1}
+  call Log ('Sending /didOpen notification ', a:uri)
+  let g:lsp[&filetype]['files'][a:uri] = {'bufer': bufnr(), 'version': 1}
 endfunction
 
 
-function DidClose() abort
-  let l:uri = 'file://' . expand("%:p")
+function! DidClose(uri) abort
+"  let l:uri = 'file://' . expand("%:p")
   let l:didClose = {
     \'method':'textDocument/didClose',
     \'params':{
       \'textDocument': {
-        \'uri': l:uri,
+        \'uri': a:uri,
       \},
     \},
   \}
   call ch_sendexpr(g:lsp[&filetype]['channel'], l:didClose)
-  call Log ('Sending /didClose notification ', l:uri)
-  unlet g:lsp[&filetype]['files'][l:uri]
+  call Log ('Sending /didClose notification ', a:uri)
+  unlet g:lsp[&filetype]['files'][a:uri]
 endfunction
-"call LspStart()
-"call LspInit()
-"call DidOpen()
-"call Hover()
-"call LspStop()
-"
 
 function! Get_Lines() abort
   let l:lines = getbufline(bufnr(), 1, '$')

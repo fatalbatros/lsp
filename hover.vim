@@ -1,4 +1,5 @@
 function Hover() abort
+  call SyncFile()
   let l:hover = {
     \ 'method':'textDocument/hover',
     \ 'params': {
