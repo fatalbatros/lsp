@@ -8,6 +8,12 @@ if !has_key(g:lsp, 'typescript')
   \}
 endif
 
+if !has_key(g:lsp, 'cairo')
+  let g:lsp['cairo'] = {
+    \'cmd': ['scarb','cairo-language-server','/C','--node-ipc'],
+  \}
+endif
+
 let s:opt = {
   \'exit_cb': 'LspExit',
   \'out_cb': 'LspStdout',

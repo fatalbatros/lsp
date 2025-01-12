@@ -27,3 +27,4 @@ function! s:HoverCallback(channel,response) abort
   call popup_atcursor(l:formated_text,l:options)
 endfunction
 
+nnoremap K :call Hover()<CR>
