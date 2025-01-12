@@ -117,8 +117,9 @@ function! _initCallback(channel,response) abort
   else
     call Log("Initialiation Error", a:response)
   endif
-"  call AutoFunctions()
-"  call SyncFile()
+  call AutoFunctions()
+  call s:Maps()
+  call SyncFile()
 endfunction
 
 function! AutoFunctions() abort

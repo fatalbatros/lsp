@@ -16,6 +16,8 @@ TODO:
   server. I have to update that to use the didChange request. For that I have to write functions
   to compute the diferene between the current version of the file and a previous version to
   send only the diff.
+- Sync: I dont know if executing a function to compute the changes in a file will will be faster than
+  sending the fille. I suspect that for small files there will be no diference. 
 - gd: not explored
 - diagnostics: not explored
 - Competions: I will have to write a function to parse the output of the completion request if I want 
