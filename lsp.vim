@@ -127,7 +127,8 @@ function! AutoFunctions() abort
 endfunction
 
 function! s:Maps() abort
-  nnoremap K :call Hover()<CR>
+  nnoremap <buffer> K :call Hover()<CR>
+  nnoremap <buffer> gd :call Definition()<CR>
 endfunction
 
 
