@@ -8,11 +8,11 @@ if !has_key(g:lsp, 'typescript')
   \}
 endif
 
-if !has_key(g:lsp, 'cairo')
-  let g:lsp['cairo'] = {
-    \'cmd': ['scarb','cairo-language-server','/C','--node-ipc'],
-  \}
-endif
+"if !has_key(g:lsp, 'cairo')
+"  let g:lsp['cairo'] = {
+"    \'cmd': ['scarb','cairo-language-server','/C','--node-ipc'],
+"  \}
+"endif
 
 let s:opt = {
   \'exit_cb': 'LspExit',
@@ -121,9 +121,14 @@ function! _initCallback(channel,response) abort
 "  call SyncFile()
 endfunction
 
-"function! AutoFunctions() abort
-"  execute 'au filetype ' . &filetype . ' call SyncFile()'
-"endfunction
+function! AutoFunctions() abort
+  execute 'au filetype ' . &filetype . ' call s:Maps()'
+endfunction
+
+function! s:Maps() abort
+  nnoremap K :call Hover()<CR>
+endfunction
+
 
 function! SyncFile() abort
 "this sync should change for a more optimal function using the didChange

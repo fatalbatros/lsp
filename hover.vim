@@ -16,6 +16,7 @@ function! s:HoverCallback(channel,response) abort
   echom 'HoverCallback'
   echom a:response
   let g:response = a:response
+  if a:response['result'] == v:null | echo 'null response' | return | endif
   let l:hover_text = a:response['result']['contents']['value']
   let l:options = {
     \'border':[1,1,1,1],

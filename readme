@@ -1,0 +1,30 @@
+Im writing a lsp client in vim. The overall roadmap will be: hover, go to definition, diagnostics, completions.
+
+At the moment I will be testing with typescript lsp. The to "configure" a server just add to the g:lsp dictionary a new key "filetype": {cmd: 'command to run the server'}
+
+To "load" the client just source the source.vim file and call LspStart() from a file. 
+
+
+DONE: 
+- Hover: call Hover() or use K
+- Pupup: The popupwindows is very basic and I have no plans to bloat it.
+
+TODO:
+- Sync: At the moment the open files sync between server and clients is very sub-optimal. 
+  Each time you trigger a Hover if the file is flag as modified by vim, the client sends
+  and didClose request and then a didOpen request with all the content of the file to the
+  server. I have to update that to use the didChange request. For that I have to write functions
+  to compute the diferene between the current version of the file and a previous version to
+  send only the diff.
+- gd: not explored
+- diagnostics: not explored
+- Competions: I will have to write a function to parse the output of the completion request if I want 
+  to the vim omnifunction to handle the autocompetions.
+- Load: I have to research the optimal way of autoload the client. At the moment I have an autocmd
+  that sources the source.vim file while filetype is triger. I like the idea of only load the cliente
+  when you open a filetype that has a server configured. 
+- CleanUp: I have to make something to cleaning variables/maps/autocmd when they have no more use.
+
+Next Planed Step:
+  - Explore changing the functions to vimscrip9.
+
