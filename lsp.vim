@@ -84,10 +84,16 @@ function! LspStop()
 endfunction
 
 function! LspStdout(channel, data) abort
-  echom 'Out'
-  echom a:channel
+  echom 'LspStdout'
   echom a:data
+  if has_key(a:data,'method')
+    if a:data['method'] == 'textDocument/publishDiagnostics'
+      let g:diagnostics = a:data['params']
+    endif
+  endif
 endfunction
+
+
 
 function! LspStderr(channel, data) abort
   echom 'Error'
