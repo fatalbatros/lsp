@@ -36,8 +36,14 @@ let s:capabilities = {
       \'willSave': v:false,
       \'didSave': v:true
     \},
+    \'publishDiagnostics': {
+      \'relatedInformation': v:true,
+      \'versionSuport': v:true,
+      \'dynamicRegistration': v:false,
+    \},
   \},
 \}
+
 
 function! LspStart() abort
   "start and restart the server
@@ -112,6 +118,7 @@ function! _initCallback(channel,response) abort
   let g:init_response = a:response
   if has_key(a:response,'result') && has_key(a:response['result'],'capabilities')
     call Log("Lsp Initializated")
+    let g:capabilities = a:response['result']['capabilities']
     call ch_sendexpr(a:channel, {'method':'initialized', 'params':{}})
     call Log("Sending Initializated Notification")
   else
@@ -188,6 +195,6 @@ endfunction
 let g:log_lsp = expand("%:p:h") . '/log.log'
 function! Log(header,...) abort
   if !empty(g:log_lsp)
-    call writefile([strftime('%Y-%m-%d %T') . ' -> '. a:header .' : '. string(a:000)], g:log_lsp, 'a')
+"    call writefile([strftime('%Y-%m-%d %T') . ' -> '. a:header .' : '. string(a:000)], g:log_lsp, 'a')
   endif
 endfunction

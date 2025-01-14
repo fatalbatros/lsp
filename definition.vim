@@ -1,6 +1,6 @@
 function Definition() abort
   call SyncFile()
-  let l:hover = {
+  let l:request = {
     \ 'method':'textDocument/definition',
     \ 'params': {
     \ 'textDocument': {'uri': 'file://' . expand("%:p")},
@@ -9,7 +9,7 @@ function Definition() abort
       \}
     \ }
   \ }
-  call ch_sendexpr(g:lsp[&filetype]['channel'],l:hover,{'callback':'s:DefinitionCallBack'})
+  call ch_sendexpr(g:lsp[&filetype]['channel'],l:request,{'callback':'s:DefinitionCallBack'})
 endfunction 
 
 function! s:DefinitionCallBack(channel,response) abort
@@ -24,7 +24,7 @@ function! s:DefinitionCallBack(channel,response) abort
   "single character that span several colums. Research this.
   let l:line = a:response['result'][0]['range']['start']['line'] + 1
   let l:character = a:response['result'][0]['range']['start']['character'] + 1
-  execute(':edit '.expand(l:uri))
+  execute(':edit '.fnameescape(l:uri))
   call setcursorcharpos(l:line,l:character) 
 endfunction
 

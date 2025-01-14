@@ -19,7 +19,7 @@ function! s:HoverCallback(channel,response) abort
   if a:response['result'] == v:null | echo 'null response' | return | endif
   let l:hover_text = a:response['result']['contents']['value']
   let l:options = {
-    \'border':[1,1,1,1],
+    \'border':[2,2,2,2],
     \'highlight':'Normal',
     \'borderchars':['-','|','-','|','+','+','+','+'],
     \'moved':'word'
