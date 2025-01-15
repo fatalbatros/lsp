@@ -13,13 +13,16 @@ call prop_type_add('diagnosticMark',{'priority': -1, 'override': v:false})
 
 
 function! ParseDiagnostics() abort
-  if g:diagnostics['uri'] != 'file://' . expand("%:p")
+  let l:uri = 'file://' . expand("%:p")
+  if !exists("g:diagnostics") | return | endif
+  if !has_key(g:diagnostics, l:uri)
     return
   endif
-  let b:diagnostic_text = {}
   call prop_clear(1,line('$'))
+  let b:diag = g:diagnostics[l:uri]
 
-  let b:diag = g:diagnostics['diagnostics']
+  let b:diagnostic_text = {}
+
   let l:idx = 1
   for i in b:diag
     "the pad is temporal to see first the error and then the warnings
@@ -30,7 +33,7 @@ function! ParseDiagnostics() abort
       let l:type = 'diagnosticError'
     endif
     let l:line = i['range']['start']['line'] + 1
-    let l:char = i['range']['start']['character'] 
+    let l:char = i['range']['start']['character'] + 1
     let l:text = i['message']
     call prop_add(l:line,0,{'type': l:type , 'text':l:text,'text_align':'right', 'text_wrap':'truncate'})
     call prop_add(l:line,l:char + l:pad ,{'type': l:type . 'Inline' })
@@ -74,5 +77,3 @@ function! s:ShowDiagnostic(diagnostic) abort
 endfunction
   
 
-nnoremap <silent> ]d :call NextDiagnostic()<CR>
-nnoremap <silent> [d :call PreviousDiagnostic()<CR>

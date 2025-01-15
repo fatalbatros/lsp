@@ -1,3 +1,4 @@
+"Configuration 
 if !exists("g:lsp")
   let g:lsp = {}
 endif
@@ -8,11 +9,20 @@ if !has_key(g:lsp, 'typescript')
   \}
 endif
 
-"if !has_key(g:lsp, 'cairo')
-"  let g:lsp['cairo'] = {
-"    \'cmd': ['scarb','cairo-language-server','/C','--node-ipc'],
-"  \}
-"endif
+if !has_key(g:lsp, 'cairo')
+  let g:lsp['cairo'] = {
+    \'cmd': ['scarb','cairo-language-server','/C','--node-ipc'],
+  \}
+endif
+
+"keymaps 
+function! s:Maps() abort
+  nnoremap <silent><buffer> K :call Hover()<CR>
+  nnoremap <silent><buffer> gd :call Definition()<CR>
+  nnoremap <silent><buffer> <space>s :call SyncFile()<CR>
+  nnoremap <silent><buffer> ]d :call NextDiagnostic()<CR>
+  nnoremap <silent><buffer> [d :call PreviousDiagnostic()<CR>
+endfunction
 
 let s:opt = {
   \'exit_cb': 'LspExit',
@@ -88,12 +98,15 @@ function! LspStdout(channel, data) abort
   echom a:data
   if has_key(a:data,'method')
     if a:data['method'] == 'textDocument/publishDiagnostics'
-      let g:diagnostics = a:data['params']
+      if !exists("g:diagnostics") 
+        let g:diagnostics ={}
+      endif
+      let l:temp = a:data['params'] 
+      let g:diagnostics[l:temp['uri']] = l:temp['diagnostics']
       call ParseDiagnostics()
     endif
   endif
 endfunction
-
 
 
 function! LspStderr(channel, data) abort
@@ -131,23 +144,36 @@ function! _initCallback(channel,response) abort
   else
     call Log("Initialiation Error", a:response)
   endif
-  call AutoFunctions()
-  call s:Maps()
+
+  execute 'au filetype ' . &filetype . ' call SetupBuffer()'
+  bufdo call s:EnsureStart(&filetype)
+endfunction
+
+
+function s:EnsureStart(type)
+  echom 'Ensure'
+  let l:buf = bufnr('%')
+  bufdo  if &filetype == a:type | call SetupBuffer() | endif 
+  execute 'buffer ' . l:buf
+endfunction
+
+function! SetupBuffer() abort
+  augroup LspBuferAu
+    autocmd! * <buffer>
+    au bufenter <buffer> call ParseDiagnostics()  
+    au bufdelete <buffer> call DidClose(expand('<afile>:p')) 
+    au bufenter <buffer> call SyncFile()  
+"    au textchanged <buffer> call SyncFile()  
+"    au insertleave <buffer> call SyncFile()  
+  augroup END
   call SyncFile()
+  call  s:Maps()
 endfunction
 
-function! AutoFunctions() abort
-  execute 'au filetype ' . &filetype . ' call s:Maps()'
-  execute 'au filetype ' . &filetype . ' call SyncFile()'
-endfunction
-
-function! s:Maps() abort
-  nnoremap <buffer> K :call Hover()<CR>
-  nnoremap <buffer> gd :call Definition()<CR>
-endfunction
 
 
 function! SyncFile() abort
+"TODO: revisar b:changedtick
 "this sync should change for a more optimal function using the didChange
 "request/response of the lsp. At the moment if the buffer is flaged as
 "changed (respect of the file in disc) the sync functions sends all the buffer
@@ -156,7 +182,7 @@ function! SyncFile() abort
   if !has_key(g:lsp[&filetype]['files'], l:uri)
     call DidOpen(l:uri)
   elseif &modified
-    call DidClose(l:uri)
+    call s:FastClose(l:uri)
     call DidOpen(l:uri)
   endif
 endfunction
@@ -179,8 +205,7 @@ function! DidOpen(uri) abort
 endfunction
 
 
-function! DidClose(uri) abort
-"  let l:uri = 'file://' . expand("%:p")
+function! s:FastClose(uri) abort
   let l:didClose = {
     \'method':'textDocument/didClose',
     \'params':{
@@ -190,8 +215,24 @@ function! DidClose(uri) abort
     \},
   \}
   call ch_sendexpr(g:lsp[&filetype]['channel'], l:didClose)
-  call Log ('Sending /didClose notification ', a:uri)
-  unlet g:lsp[&filetype]['files'][a:uri]
+endfunction
+
+function! DidClose(file) abort
+  let l:uri = 'file://' . a:file
+  let l:didClose = {
+    \'method':'textDocument/didClose',
+    \'params':{
+      \'textDocument': {
+        \'uri': l:uri,
+      \},
+    \},
+  \}
+  call ch_sendexpr(g:lsp[&filetype]['channel'], l:didClose)
+  call Log ('Sending /didClose notification ', l:uri)
+  unlet g:lsp[&filetype]['files'][l:uri]
+  if exists("g:diagnostics")
+    if has_key(g:diagnostics, l:uri) | unlet g:diagnostics[l:uri] | endif
+  endif
 endfunction
 
 function! Get_Lines() abort
