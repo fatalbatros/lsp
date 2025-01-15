@@ -89,6 +89,7 @@ function! LspStdout(channel, data) abort
   if has_key(a:data,'method')
     if a:data['method'] == 'textDocument/publishDiagnostics'
       let g:diagnostics = a:data['params']
+      call ParseDiagnostics()
     endif
   endif
 endfunction
@@ -137,6 +138,7 @@ endfunction
 
 function! AutoFunctions() abort
   execute 'au filetype ' . &filetype . ' call s:Maps()'
+  execute 'au filetype ' . &filetype . ' call SyncFile()'
 endfunction
 
 function! s:Maps() abort
