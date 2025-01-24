@@ -19,7 +19,7 @@ endif
 function! s:Maps() abort
   nnoremap <silent><buffer> K :call Hover()<CR>
   nnoremap <silent><buffer> gd :call Definition()<CR>
-  nnoremap <silent><buffer> <space>s :call SyncFile()<CR>
+  nnoremap <silent><buffer> <space>s :call ForceSync()<CR>
   nnoremap <silent><buffer> ]d :call NextDiagnostic()<CR>
   nnoremap <silent><buffer> [d :call PreviousDiagnostic()<CR>
 endfunction
@@ -162,14 +162,17 @@ function! SetupBuffer() abort
 endfunction
 
 
-
 function! ForceSync() abort
 "TODO: revisar b:changedtick
   let l:uri = 'file://' . expand("%:p")
   if !has_key(g:lsp[&filetype]['files'], l:uri)
+    let b:sync_changedtick = b:changedtick
     call DidOpen(l:uri)
   else
-    call DidChange(l:uri)
+    if b:sync_changedtick != b:changedtick
+      let b:sync_changedtick = b:changedtick
+      call DidChange(l:uri)
+    endif
   endif
 endfunction
 
