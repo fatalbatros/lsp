@@ -25,9 +25,9 @@ function! s:Maps() abort
 endfunction
 
 let s:opt = {
-  \'exit_cb': 'LspExit',
-  \'out_cb': 'LspStdout',
-  \'err_cb': 'LspStderr',
+  \'exit_cb': 's:LspExit',
+  \'out_cb': 's:LspStdout',
+  \'err_cb': 's:LspStderr',
   \'noblock': 1,
   \'in_mode': 'lsp',
   \'out_mode': 'lsp',
@@ -77,7 +77,7 @@ function! LspStart() abort
   let g:lsp[&filetype]['job_id'] = job_id
   let g:lsp[&filetype]['channel'] = job_getchannel(job_id)
   let g:lsp[&filetype]['files'] = {}
-  call LspInit()
+  call s:LspInit()
 endfunction
 
 function! LspStop()
@@ -90,7 +90,7 @@ function! LspStop()
   endif
 endfunction
 
-function! LspStdout(channel, data) abort
+function! s:LspStdout(channel, data) abort
   echom 'LspStdout'
   echom a:data
   if has_key(a:data,'method')
@@ -106,16 +106,16 @@ function! LspStdout(channel, data) abort
 endfunction
 
 
-function! LspStderr(channel, data) abort
+function! s:LspStderr(channel, data) abort
   echom 'Error'
   echom a:data
 endfunction
 
-function! LspExit(job_id, exit_code) abort
+function! s:LspExit(job_id, exit_code) abort
   echom 'LSP exited with status: ' . a:exit_code
 endfunction
 
-function! LspInit() abort
+function! s:LspInit() abort
   echom 'initialize'
   let request = {
     \   'method': 'initialize',
@@ -128,10 +128,10 @@ function! LspInit() abort
     \     'trace': 'off',
     \   },
   \ }
-  call ch_sendexpr(g:lsp[&filetype]['channel'], request, {'callback':'_initCallback'})
+  call ch_sendexpr(g:lsp[&filetype]['channel'], request, {'callback':'s:initCallback'})
 endfunction
 
-function! _initCallback(channel,response) abort
+function! s:initCallback(channel,response) abort
   let g:init_response = a:response
   if has_key(a:response,'result') && has_key(a:response['result'],'capabilities')
     let g:capabilities = a:response['result']['capabilities']
@@ -181,7 +181,7 @@ function! DidOpen(uri) abort
         \'uri': a:uri,
         \'languageId': 'typescript', 
         \'version': 1,
-        \'text': Get_Lines(),
+        \'text': s:get_lines(),
       \},
     \},
   \}
@@ -207,7 +207,7 @@ function! DidClose(file) abort
   endif
 endfunction
 
-function! Get_Lines() abort
+function! s:get_lines() abort
   let l:lines = getbufline(bufnr(), 1, '$')
   return join(l:lines, "\n")
 endfunction
@@ -224,7 +224,7 @@ function! DidChange(uri) abort
         \'version': l:version + 1,
       \},
       \'contentChanges': {
-        \'text': Get_Lines()
+        \'text': s:get_lines()
       \}
     \},
   \}
