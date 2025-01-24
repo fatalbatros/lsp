@@ -1,31 +1,31 @@
-function Hover() abort
-  call ForceSync()
-  let l:hover = {
-    \ 'method':'textDocument/hover',
-    \ 'params': {
-    \ 'textDocument': {'uri': 'file://' . expand("%:p")},
-    \ 'position': {'line': getpos('.')[1]-1,
-        \ 'character': getpos('.')[2],
-      \}
-    \ }
-  \ }
-  call ch_sendexpr(g:lsp[&filetype]['channel'],l:hover,{'callback':'s:HoverCallback'})
-endfunction 
 
-function! s:HoverCallback(channel,response) abort
+def g:Hover()
+  legacy call ForceSync()
+  const hover = {
+     'method': 'textDocument/hover',
+     'params': {
+     'textDocument': {'uri': 'file://' .. expand("%:p") },
+     'position': {'line': getpos('.')[1] - 1,
+        'character': getpos('.')[2],
+      }
+     }
+   }
+  call ch_sendexpr(g:lsp[&filetype]['channel'], hover, {'callback': 'HoverCallback'})
+enddef
+
+def HoverCallback(channel: channel, response: dict<any>)
   echom 'HoverCallback'
-  echom a:response
-  let g:response = a:response
-  if a:response['result'] == v:null | echo 'null response' | return | endif
-  let l:hover_text = a:response['result']['contents']['value']
-  let l:options = {
-    \'border':[2,2,2,2],
-    \'highlight':'Normal',
-    \'borderchars':['-','|','-','|','+','+','+','+'],
-    \'moved':'word'
-  \}
-  let l:formated_text =  split(l:hover_text, '\r\n\|\r\|\n', v:true)
-  call popup_atcursor(l:formated_text,l:options)
-endfunction
+  echom response
+  #let g:response = a:response
+  if response['result'] == v:null | echo 'null response' | return | endif
+  const hover_text = response['result']['contents']['value']
+  const options = {
+    'border': [2, 2, 2, 2],
+    'highlight': 'Normal',
+    'borderchars': ['-', '|', '-', '|', '+', '+', '+', '+'],
+    'moved': 'word'
+  }
+  const formated_text =  split(hover_text, '\r\n\|\r\|\n', v:true)
+  popup_atcursor(formated_text, options)
+enddef
 
-"nnoremap K :call Hover()<CR>
