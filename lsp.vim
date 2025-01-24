@@ -92,7 +92,7 @@ endfunction
 
 function! s:LspStdout(channel, data) abort
   echom 'LspStdout'
-  echom a:data
+"  echom a:data
   if has_key(a:data,'method')
     if a:data['method'] == 'textDocument/publishDiagnostics'
       if !exists("g:diagnostics") 
@@ -179,7 +179,7 @@ function! DidOpen(uri) abort
     \'params':{
       \'textDocument': {
         \'uri': a:uri,
-        \'languageId': 'typescript', 
+        \'languageId': &filetype, 
         \'version': 1,
         \'text': s:get_lines(),
       \},
@@ -220,14 +220,11 @@ function! DidChange(uri) abort
     \'params':{
       \'textDocument': {
         \'uri': a:uri,
-        \'languageId': 'typescript', 
+        \'languageId': &filetype, 
         \'version': l:version + 1,
       \},
-      \'contentChanges': {
-        \'text': s:get_lines()
-      \}
+      \'contentChanges': [{'text': s:get_lines() }],
     \},
   \}
   call ch_sendexpr(g:lsp[&filetype]['channel'],l:didChange)
-  let g:lsp[&filetype]['files'][a:uri] = {'bufer': bufnr(), 'version': 1}
 endfunction
