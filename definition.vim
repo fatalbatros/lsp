@@ -1,5 +1,5 @@
 function Definition() abort
-  call SyncFile()
+  call ForceSync()
   let l:request = {
     \ 'method':'textDocument/definition',
     \ 'params': {
@@ -19,11 +19,16 @@ function! s:DefinitionCallBack(channel,response) abort
   if a:response['result'] == v:null | echo 'null response' | return | endif
   "the result is a list and can have various files. I dont know why.
   "write something to handle multiple definitions, maybe use a qf list.
-  let l:uri = a:response['result'][0]['uri']
+  if type(a:response['result']) == v:t_list
+    let l:temp = a:response['result'][0]
+  else 
+    let l:temp = a:response['result']
+  endif
+  let l:uri = l:temp['uri']
   "there might be a problem with position. I think that a tab counts as a
   "single character that span several colums. Research this.
-  let l:line = a:response['result'][0]['range']['start']['line'] + 1
-  let l:character = a:response['result'][0]['range']['start']['character'] + 1
+  let l:line = l:temp['range']['start']['line'] + 1
+  let l:character = l:temp['range']['start']['character'] + 1
   execute(':edit '.fnameescape(l:uri))
   call setcursorcharpos(l:line,l:character) 
 endfunction

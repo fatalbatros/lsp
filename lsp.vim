@@ -68,18 +68,15 @@ function! LspStart() abort
       echoerr 'Lsp for ' . &filetype . ' is running'
       return
     else
-      call Log('Stoping Lsp', &filetype)
       call job_stop(g:lsp[&filetype]['job_id'])
     endif
   endif
 
   let cmd = g:lsp[&filetype]['cmd']
-  call Log('Starting Lsp', &filetype, cmd)
   let job_id = job_start(cmd,s:opt)
   let g:lsp[&filetype]['job_id'] = job_id
   let g:lsp[&filetype]['channel'] = job_getchannel(job_id)
   let g:lsp[&filetype]['files'] = {}
-  call Log("Lsp Started", &filetype, job_id)
   call LspInit()
 endfunction
 
@@ -137,12 +134,8 @@ endfunction
 function! _initCallback(channel,response) abort
   let g:init_response = a:response
   if has_key(a:response,'result') && has_key(a:response['result'],'capabilities')
-    call Log("Lsp Initializated")
     let g:capabilities = a:response['result']['capabilities']
     call ch_sendexpr(a:channel, {'method':'initialized', 'params':{}})
-    call Log("Sending Initializated Notification")
-  else
-    call Log("Initialiation Error", a:response)
   endif
 
   execute 'au filetype ' . &filetype . ' call SetupBuffer()'
@@ -162,28 +155,21 @@ function! SetupBuffer() abort
     autocmd! * <buffer>
     au bufenter <buffer> call ParseDiagnostics()  
     au bufdelete <buffer> call DidClose(expand('<afile>:p')) 
-    au bufenter <buffer> call SyncFile()  
-"    au textchanged <buffer> call SyncFile()  
-"    au insertleave <buffer> call SyncFile()  
+    au bufenter <buffer> call ForceSync()  
   augroup END
-  call SyncFile()
+  call ForceSync()
   call  s:Maps()
 endfunction
 
 
 
-function! SyncFile() abort
+function! ForceSync() abort
 "TODO: revisar b:changedtick
-"this sync should change for a more optimal function using the didChange
-"request/response of the lsp. At the moment if the buffer is flaged as
-"changed (respect of the file in disc) the sync functions sends all the buffer
-"to the server each time the client wants a hover. 
   let l:uri = 'file://' . expand("%:p")
   if !has_key(g:lsp[&filetype]['files'], l:uri)
     call DidOpen(l:uri)
-  elseif &modified
-    call s:FastClose(l:uri)
-    call DidOpen(l:uri)
+  else
+    call DidChange(l:uri)
   endif
 endfunction
 
@@ -200,22 +186,9 @@ function! DidOpen(uri) abort
     \},
   \}
   call ch_sendexpr(g:lsp[&filetype]['channel'],l:didOpen)
-  call Log ('Sending /didOpen notification ', a:uri)
   let g:lsp[&filetype]['files'][a:uri] = {'bufer': bufnr(), 'version': 1}
 endfunction
 
-
-function! s:FastClose(uri) abort
-  let l:didClose = {
-    \'method':'textDocument/didClose',
-    \'params':{
-      \'textDocument': {
-        \'uri': a:uri,
-      \},
-    \},
-  \}
-  call ch_sendexpr(g:lsp[&filetype]['channel'], l:didClose)
-endfunction
 
 function! DidClose(file) abort
   let l:uri = 'file://' . a:file
@@ -228,7 +201,6 @@ function! DidClose(file) abort
     \},
   \}
   call ch_sendexpr(g:lsp[&filetype]['channel'], l:didClose)
-  call Log ('Sending /didClose notification ', l:uri)
   unlet g:lsp[&filetype]['files'][l:uri]
   if exists("g:diagnostics")
     if has_key(g:diagnostics, l:uri) | unlet g:diagnostics[l:uri] | endif
@@ -240,10 +212,22 @@ function! Get_Lines() abort
   return join(l:lines, "\n")
 endfunction
 
-
-let g:log_lsp = expand("%:p:h") . '/log.log'
-function! Log(header,...) abort
-  if !empty(g:log_lsp)
-"    call writefile([strftime('%Y-%m-%d %T') . ' -> '. a:header .' : '. string(a:000)], g:log_lsp, 'a')
-  endif
+function! DidChange(uri) abort
+  let l:version = g:lsp[&filetype]['files'][a:uri]['version']
+  let g:lsp[&filetype]['files'][a:uri]['version'] += 1
+  let l:didChange = {
+    \'method':'textDocument/didChange',
+    \'params':{
+      \'textDocument': {
+        \'uri': a:uri,
+        \'languageId': 'typescript', 
+        \'version': l:version + 1,
+      \},
+      \'contentChanges': {
+        \'text': Get_Lines()
+      \}
+    \},
+  \}
+  call ch_sendexpr(g:lsp[&filetype]['channel'],l:didChange)
+  let g:lsp[&filetype]['files'][a:uri] = {'bufer': bufnr(), 'version': 1}
 endfunction
