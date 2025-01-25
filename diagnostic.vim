@@ -42,37 +42,37 @@ def g:ParseDiagnostics()
   endfor
 enddef
 
-function! NextDiagnostic() abort
-  let l:diag = prop_find({'type':'diagnosticMark','skipstart': v:true}, "f")
-  if empty(l:diag) 
+def g:NextDiagnostic()
+  var diag = prop_find({'type': 'diagnosticMark', 'skipstart': v:true}, "f")
+  if empty(diag) 
     echo "No more diagnostics"
     return
   endif
-  call s:ShowDiagnostic(l:diag)
-endfunction
+  call s:ShowDiagnostic(diag)
+enddef
 
-function! PreviousDiagnostic() abort
-  let l:diag = prop_find({'type':'diagnosticMark','skipstart': v:true}, "b")
-  if empty(l:diag) 
+def g:PreviousDiagnostic()
+  var diag = prop_find({'type': 'diagnosticMark', 'skipstart': v:true}, "b")
+  if empty(diag) 
     echo "No more diagnostics"
     return
   endif
-  call s:ShowDiagnostic(l:diag)
-endfunction
+  s:ShowDiagnostic(diag)
+enddef
 
-function! s:ShowDiagnostic(diagnostic) abort
-  let l:line = a:diagnostic['lnum']
-  let l:col = a:diagnostic['col']
-  let l:id = a:diagnostic['id']
-  let l:text = b:diagnostic_text[l:id]['text']
-  let l:hi = b:diagnostic_text[l:id]['highlight']
-  call setcursorcharpos(l:line,l:col) 
-  let l:options = {
-    \'pos': 'topleft',
-    \'highlight':l:hi,
-    \'moved':'any',
-  \}
-  call popup_atcursor(l:text,l:options)
-endfunction
+def s:ShowDiagnostic(diagnostic: dict<any>)
+  var line = diagnostic['lnum']
+  var col = diagnostic['col']
+  var id = diagnostic['id']
+  var text = b:diagnostic_text[id]['text']
+  var hi = b:diagnostic_text[id]['highlight']
+  setcursorcharpos(line, col) 
+  var options = {
+    'pos': 'topleft',
+    'highlight': hi,
+    'moved': 'any',
+  }
+  popup_atcursor(text, options)
+enddef
   
 
