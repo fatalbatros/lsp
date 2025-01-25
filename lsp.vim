@@ -77,6 +77,7 @@ function! LspStart() abort
   let g:lsp[&filetype]['job_id'] = job_id
   let g:lsp[&filetype]['channel'] = job_getchannel(job_id)
   let g:lsp[&filetype]['files'] = {}
+  let g:diagnostics = {}
   call s:LspInit()
 endfunction
 
@@ -90,21 +91,23 @@ function! LspStop()
   endif
 endfunction
 
-function! s:LspStdout(channel, data) abort
-  echom 'LspStdout'
-  echom a:data
-  if has_key(a:data,'method')
-    if a:data['method'] == 'textDocument/publishDiagnostics'
-      if !exists("g:diagnostics") 
-        let g:diagnostics ={}
-      endif
-      let l:temp = a:data['params'] 
-      let g:diagnostics[l:temp['uri']] = l:temp['diagnostics']
-      call ParseDiagnostics()
+def s:LspStdout(channel: channel, data: dict<any>)
+  if has_key(data, 'method')
+    if data['method'] == 'textDocument/publishDiagnostics'
+      s:publishDiagnosticsCB(data['params'])
+      return
     endif
   endif
-endfunction
+  echom data
+enddef
 
+def s:publishDiagnosticsCB(params: dict<any>)
+  var uri = params['uri']
+  if bufexists(strpart(uri, 7))
+    g:diagnostics[uri] = params['diagnostics']
+    g:ParseDiagnostics()
+  endif
+enddef
 
 function! s:LspStderr(channel, data) abort
   echom 'Error'
