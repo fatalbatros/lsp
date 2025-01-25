@@ -1,35 +1,31 @@
-function! ForceSync() abort
-  let l:uri = 'file://' . expand("%:p")
-  if !has_key(g:lsp[&filetype]['files'], l:uri)
-    let g:lsp[&filetype]['files'][l:uri] = {'bufer': bufnr(), 'version': 1}
-    let b:sync_changedtick = b:changedtick
-    call DidOpen(l:uri)
-  else
-    if b:sync_changedtick != b:changedtick
-      let l:new_version = g:lsp[&filetype]['files'][l:uri]['version'] + 1
-      let g:lsp[&filetype]['files'][l:uri]['version'] = l:new_version
-      let b:sync_changedtick = b:changedtick
-      call DidChange(l:uri, l:new_version)
+
+def g:DidClose(file: string)
+  var uri = 'file://' .. file
+  var filetype: string 
+  var didClose = {
+    'method': 'textDocument/didClose',
+    'params': {
+      'textDocument': {
+        'uri': uri,
+      },
+    },
+  }
+
+  for ft in keys(g:lsp)
+    if !has_key(g:lsp[ft], 'files') | continue | endif
+    if has_key(g:lsp[ft]['files'], uri)
+      filetype = ft
+    endif
+  endfor
+
+  ch_sendexpr(g:lsp[filetype]['channel'], didClose)
+  unlet g:lsp[filetype]['files'][uri]
+  if exists("g:diagnostics")
+    if has_key(g:diagnostics, uri)
+      unlet g:diagnostics[uri] 
     endif
   endif
-endfunction
-
-function! DidClose(file) abort
-  let l:uri = 'file://' . a:file
-  let l:didClose = {
-    \'method':'textDocument/didClose',
-    \'params':{
-      \'textDocument': {
-        \'uri': l:uri,
-      \},
-    \},
-  \}
-  call ch_sendexpr(g:lsp[&filetype]['channel'], l:didClose)
-  unlet g:lsp[&filetype]['files'][l:uri]
-  if exists("g:diagnostics")
-    if has_key(g:diagnostics, l:uri) | unlet g:diagnostics[l:uri] | endif
-  endif
-endfunction
+enddef
 
 
 def s:get_lines():  string
@@ -37,7 +33,7 @@ def s:get_lines():  string
   return join(lines, "\n")
 enddef
 
-def DidOpen(uri: string)
+def s:DidOpen(uri: string)
   var didOpen = {
     'method': 'textDocument/didOpen',
     'params': {
@@ -53,7 +49,7 @@ def DidOpen(uri: string)
 enddef
 
 
-def g:DidChange(uri: string, version: number)
+def s:DidChange(uri: string, version: number)
   var didChange = {
     'method': 'textDocument/didChange',
     'params': {
@@ -66,4 +62,21 @@ def g:DidChange(uri: string, version: number)
     },
   }
   call ch_sendexpr(g:lsp[&filetype]['channel'], didChange)
+enddef
+
+
+def g:ForceSync()
+  var uri = 'file://' .. expand("%:p")
+  if !has_key(g:lsp[&filetype]['files'], uri)
+    g:lsp[&filetype]['files'][uri] = {'bufer': bufnr(), 'version': 1}
+    b:sync_changedtick = b:changedtick
+    s:DidOpen(uri)
+  else
+    if b:sync_changedtick != b:changedtick
+      var new_version = g:lsp[&filetype]['files'][uri]['version'] + 1
+      g:lsp[&filetype]['files'][uri]['version'] = new_version
+      b:sync_changedtick = b:changedtick
+      s:DidChange(uri, new_version)
+    endif
+  endif
 enddef
