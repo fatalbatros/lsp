@@ -9,7 +9,7 @@ DONE:
 - Hover: call Hover() or use K
 - Pupup: The popupwindows is very basic and I have no plans to bloat it.
 - Definition: call Definition() or use gd.
-- Diagnostics: The files are sync when opened. Use <space>s or :call SyncFile() to resync them.
+- Diagnostics: The files are sync when opened. Use <space>w or :call ForceSync() to resync them.
   At the moment I do not know when should be optimal to sync the files. This will change in the future.
   The maps ]d and [d can be used to navigate throught diferent diagnostics.
 
@@ -30,7 +30,6 @@ TODO:
   to set the position after go to definition, there also existe the vim cursor() function. The diference
   between them made me think that thece could be a problem.
 
-- diagnostics: not explored
 
 - Competions: I will have to write a function to parse the output of the completion request if I want 
   to the vim omnifunction to handle the autocompetions.
@@ -39,10 +38,11 @@ TODO:
   that sources the source.vim file while filetype is triger. I like the idea of only load the cliente
   when you open a filetype that has a server configured. 
 
-- CleanUp: I have to make something to cleaning variables/maps/autocmd when they have no more use.
-
-- Explore changing the functions to vimscrip9.
+Tasks:
+- vim9 : ForceSync should  not handle the version of the file. 
 
 Next Planed Step:
-- Test what I have with diferent LSPs that I use.
+- Autocompletion:
+* Make the autocomplete request
+* Make the omnifunction for handle the response
 
