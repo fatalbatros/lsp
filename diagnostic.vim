@@ -1,15 +1,17 @@
-let s:hiType = {
-  \'diagnosticError': 'WarningMsg',
-  \'diagnosticErrorInline': 'WarningMsg',
-  \'diagnosticWarning': 'Changed',
-  \'diagnosticWarningInline': 'Changed',
-\}
+vim9script
 
-call prop_type_add('diagnosticError',{'highlight': s:hiType['diagnosticError']})
-call prop_type_add('diagnosticErrorInline',{ 'overrride': v:false})
-call prop_type_add('diagnosticWarning',{'highlight': s:hiType['diagnosticWarning']})
-call prop_type_add('diagnosticWarningInline',{ 'override': v:false})
-call prop_type_add('diagnosticMark',{'priority': -1, 'override': v:false})
+var hiType = {
+  'diagnosticError': 'WarningMsg',
+  'diagnosticErrorInline': 'WarningMsg',
+  'diagnosticWarning': 'Changed',
+  'diagnosticWarningInline': 'Changed',
+}
+
+prop_type_add('diagnosticError', {'highlight': hiType['diagnosticError']})
+prop_type_add('diagnosticErrorInline', { 'overrride': v:false})
+prop_type_add('diagnosticWarning', {'highlight': hiType['diagnosticWarning']})
+prop_type_add('diagnosticWarningInline', { 'override': v:false})
+prop_type_add('diagnosticMark', {'priority': -1, 'override': v:false})
 
 
 def g:ParseDiagnostics()
@@ -24,7 +26,7 @@ def g:ParseDiagnostics()
 
   var idx = 1
   for i in b:diag
-    #the pad is temporal to see first the error and then the warnings
+    # the pad is temporal to see first the error and then the warnings
     var pad = 1
     var type = 'diagnosticWarning'
     if i['severity'] == 1
@@ -48,7 +50,7 @@ def g:NextDiagnostic()
     echo "No more diagnostics"
     return
   endif
-  call s:ShowDiagnostic(diag)
+  call ShowDiagnostic(diag)
 enddef
 
 def g:PreviousDiagnostic()
@@ -57,10 +59,10 @@ def g:PreviousDiagnostic()
     echo "No more diagnostics"
     return
   endif
-  s:ShowDiagnostic(diag)
+  ShowDiagnostic(diag)
 enddef
 
-def s:ShowDiagnostic(diagnostic: dict<any>)
+def ShowDiagnostic(diagnostic: dict<any>)
   var line = diagnostic['lnum']
   var col = diagnostic['col']
   var id = diagnostic['id']

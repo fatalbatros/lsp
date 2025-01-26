@@ -1,3 +1,4 @@
+vim9script
 
 def g:DidClose(file: string)
   var uri = 'file://' .. file
@@ -28,12 +29,12 @@ def g:DidClose(file: string)
 enddef
 
 
-def s:get_lines():  string
+def Get_lines():  string
   var lines = getbufline(bufnr(), 1, '$')
   return join(lines, "\n")
 enddef
 
-def s:DidOpen(uri: string)
+def DidOpen(uri: string)
   var didOpen = {
     'method': 'textDocument/didOpen',
     'params': {
@@ -41,7 +42,7 @@ def s:DidOpen(uri: string)
         'uri': uri,
         'languageId': &filetype, 
         'version': 1,
-        'text': s:get_lines(),
+        'text': Get_lines(),
       },
     },
   }
@@ -49,7 +50,7 @@ def s:DidOpen(uri: string)
 enddef
 
 
-def s:DidChange(uri: string, version: number)
+def DidChange(uri: string, version: number)
   var didChange = {
     'method': 'textDocument/didChange',
     'params': {
@@ -58,25 +59,25 @@ def s:DidChange(uri: string, version: number)
         'languageId': &filetype, 
         'version':  version,
       },
-      'contentChanges': [{'text': s:get_lines() }],
+      'contentChanges': [{'text': Get_lines() }],
     },
   }
   call ch_sendexpr(g:lsp[&filetype]['channel'], didChange)
 enddef
 
 
-def g:ForceSync()
+export def g:ForceSync()
   var uri = 'file://' .. expand("%:p")
   if !has_key(g:lsp[&filetype]['files'], uri)
     g:lsp[&filetype]['files'][uri] = {'bufer': bufnr(), 'version': 1}
     b:sync_changedtick = b:changedtick
-    s:DidOpen(uri)
+    DidOpen(uri)
   else
     if b:sync_changedtick != b:changedtick
       var new_version = g:lsp[&filetype]['files'][uri]['version'] + 1
       g:lsp[&filetype]['files'][uri]['version'] = new_version
       b:sync_changedtick = b:changedtick
-      s:DidChange(uri, new_version)
+      DidChange(uri, new_version)
     endif
   endif
 enddef

@@ -1,6 +1,9 @@
+vim9script
+
+import "./sync.vim"
 
 def g:Hover()
-  legacy call ForceSync()
+  g:ForceSync()
   const hover = {
      'method': 'textDocument/hover',
      'params': {
