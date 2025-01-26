@@ -22,8 +22,9 @@ def HoverCallback(channel: channel, response: dict<any>)
   const options = {
     'border': [2, 2, 2, 2],
     'highlight': 'Normal',
-    'borderchars': ['-', '|', '-', '|', '+', '+', '+', '+'],
-    'moved': 'word'
+     borderchars: ['─', '│', '─', '│', '┌', '┐', '┘', '└'], 
+    #'borderchars': ['-', '|', '-', '|', '+', '+', '+', '+'],
+    'moved': 'word',
   }
   const formated_text =  split(hover_text, '\r\n\|\r\|\n', v:true)
   popup_atcursor(formated_text, options)
