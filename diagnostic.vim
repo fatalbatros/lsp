@@ -1,8 +1,8 @@
 vim9script
 
 var hiType = {
-  'diagnosticError': 'WarningMsg',
-  'diagnosticErrorInline': 'WarningMsg',
+  'diagnosticError': 'ErrorMsg',
+  'diagnosticErrorInline': 'ErrorMsg',
   'diagnosticWarning': 'Changed',
   'diagnosticWarningInline': 'Changed',
 }
