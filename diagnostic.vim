@@ -3,8 +3,8 @@ vim9script
 var hiType = {
   'diagnosticError': 'ErrorMsg',
   'diagnosticErrorInline': 'ErrorMsg',
-  'diagnosticWarning': 'Changed',
-  'diagnosticWarningInline': 'Changed',
+  'diagnosticWarning': 'WarningMsg',
+  'diagnosticWarningInline': 'WarningMsg',
 }
 
 prop_type_add('diagnosticError', {'highlight': hiType['diagnosticError']})
@@ -73,8 +73,9 @@ def ShowDiagnostic(diagnostic: dict<any>)
     'pos': 'topleft',
     'highlight': hi,
     'moved': 'any',
+    'border': [2, 2, 2, 2],
+    'borderchars': ['─', '│', '─', '│', '┌', '┐', '┘', '└'], 
   }
   popup_atcursor(text, options)
 enddef
   
-
