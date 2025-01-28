@@ -142,7 +142,8 @@ function! s:initCallback(channel,response) abort
   endif
 
   execute 'au filetype ' . &filetype . ' call SetupBuffer()'
-  bufdo call s:EnsureStart(&filetype)
+  let l:filetype = &filetype
+  bufdo call s:EnsureStart(l:filetype)
 endfunction
 
 

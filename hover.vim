@@ -25,8 +25,8 @@ def HoverCallback(channel: channel, response: dict<any>)
   const options = {
     'border': [2, 2, 2, 2],
     'highlight': 'Normal',
+    'borderhighlight': ['LineNr'],
      borderchars: ['─', '│', '─', '│', '┌', '┐', '┘', '└'], 
-    #'borderchars': ['-', '|', '-', '|', '+', '+', '+', '+'],
     'moved': 'word',
   }
   const formated_text =  split(hover_text, '\r\n\|\r\|\n', v:true)
