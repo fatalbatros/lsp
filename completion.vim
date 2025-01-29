@@ -32,9 +32,12 @@ function! OmniLsp(findstart, base ) abort
   let l:left = strpart(getline('.'), 0, col('.')-1) .. '&'
   let l:list = []
   for i in l:data
+    echom l:left .. trim(i['label'])
     let l:word = matchstr(l:left .. trim(i['label']), '\(.*\)&\(\1\)\zs.*')
+    echom 'match: ' .. l:word
     let l:item = {
           \'word': l:word,
+          \'abbr': trim(i['label']),
           \'menu': s:completion__kinds[i['kind']],
           \'info': 'Work In Progress',
           \}
