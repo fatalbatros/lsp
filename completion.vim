@@ -4,10 +4,11 @@ function Completion() abort
       \'method': 'textDocument/completion',
       \'params': {
       \   'textDocument': {'uri': 'file://' . expand("%:p")},
-      \   'position': {'line': getpos('.')[1]-1,'character': getpos('.')[2]},
+      \   'position': {'line': getpos('.')[1]-1,'character': getpos('.')[2]-1},
       \   'context': { 'triggerKind': 1 },
       \ },
   \ }
+  echom l:request
 "  call ch_sendexpr(g:lsp[&filetype]['channel'],l:request,{'callback':'s:CompletionCallback'})
 " 
   "ch_evalexpr waits for the response. A timeout can be set in opt
@@ -19,18 +20,22 @@ endfunction
 
 set <A-z>=z
 imap <A-z> :call Completion()<CR>
-set completeopt= 
+set completeopt=menu,menuone,popup
 set omnifunc=OmniLsp
 
 function! OmniLsp(findstart, base ) abort
-  if a:findstart | return col('.') | else
+  if a:findstart
+    return col('.')
+  else
   
   let l:data = Completion()
+  let l:left = strpart(getline('.'), 0, col('.')-1) .. '&'
   let l:list = []
   for i in l:data
+    let l:word = matchstr(l:left .. trim(i['label']), '\(.*\)&\(\1\)\zs.*')
     let l:item = {
-          \'word': trim(i['textEdit']['newText']),
-          \'menu': '[' . s:completion__kinds[i['kind']] . ']',
+          \'word': l:word,
+          \'menu': s:completion__kinds[i['kind']],
           \'info': 'Work In Progress',
           \}
     call add(l:list, l:item )
