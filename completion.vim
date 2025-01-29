@@ -28,12 +28,18 @@ function! OmniLsp(findstart, base ) abort
     return col('.')
   else
   
-  let l:data = Completion()
-  let l:left = strpart(getline('.'), 0, col('.')-1) .. '&'
   let l:list = []
-  for i in l:data
-    echom l:left .. trim(i['label'])
-    let l:word = matchstr(l:left .. trim(i['label']), '\(.*\)&\(\1\)\zs.*')
+  let g:data = Completion()
+  let l:left = strpart(getline('.'), 0, col('.')-1) .. '&'
+  for i in g:data
+    let l:pretended = trim(i['label'])
+
+    if has_key(i, 'textEdit') 
+      let l:pretended = i['textEdit']['newText']
+    endif
+
+    echom l:left .. l:pretended
+    let l:word = matchstr(l:left .. l:pretended, '\(.\+\)&\(\1\)\zs.*')
     echom 'match: ' .. l:word
     let l:item = {
           \'word': l:word,
