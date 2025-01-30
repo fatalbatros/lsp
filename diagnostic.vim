@@ -1,8 +1,8 @@
 let s:hiType = {
-  \'diagnosticError': 'WarningMsg',
-  \'diagnosticErrorInline': 'WarningMsg',
-  \'diagnosticWarning': 'Changed',
-  \'diagnosticWarningInline': 'Changed',
+  \'diagnosticError': 'ErrorMsg',
+  \'diagnosticErrorInline': 'ErrorMsg',
+  \'diagnosticWarning': 'WarningMsg',
+  \'diagnosticWarningInline': 'WarningMsg',
 \}
 
 call prop_type_add('diagnosticError',{'highlight': s:hiType['diagnosticError']})

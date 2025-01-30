@@ -9,14 +9,44 @@ function Completion() abort
       \ },
   \ }
   echom l:request
-"  call ch_sendexpr(g:lsp[&filetype]['channel'],l:request,{'callback':'s:CompletionCallback'})
-" 
+  call ch_sendexpr(g:lsp[&filetype]['channel'], l:request, {'callback':'s:OnComplete'})
   "ch_evalexpr waits for the response. A timeout can be set in opt
-  let g:comple = ch_evalexpr(g:lsp[&filetype]['channel'], l:request, {})
+  "let g:comple = ch_evalexpr(g:lsp[&filetype]['channel'], l:request, {})
   "There is a field isComplete that I am ignoring, I thinks it is for the case
   "that the callback is not complete.
-  return g:comple['result']['items']
+"  return g:comple['result']['items']
 endfunction 
+
+function! s:OnComplete(channel, data) abort
+  let g:completion = a:data
+  if type(a:data['result']) == type({})
+     let l:data = a:data['result']['items']
+  else
+     let l:data = a:data['result']
+  endif
+  let l:list = []
+  let l:left = strpart(getline('.'), 0, col('.')-1)
+  let l:last_word = matchstr(l:left, '\(\k*$\)')
+  for i in l:data
+    let l:label = trim(i['label'])
+
+    "TODO: si se saca el ^ de aca, puede hacer una especie de fuzzycomplete"
+    let l:word = matchstr(l:label, '^' ..  l:last_word .. '\zs.*')
+    echom 'match: ' .. l:word
+    let l:item = {
+          \'word': l:word,
+          \'abbr': l:label,
+          \'menu': s:completion__kinds[i['kind']],
+          \'info': 'Work In Progress',
+          \}
+    "TODO: hay que sortear la lista
+    call add(l:list, l:item )
+  endfor
+
+  echom l:list
+  call complete(col('.'), l:list)
+endfunction
+
 
 set <A-z>=z
 imap <A-z> :call Completion()<CR>
@@ -27,29 +57,8 @@ function! OmniLsp(findstart, base ) abort
   if a:findstart
     return col('.')
   else
-  
-  let l:list = []
-  let g:data = Completion()
-  let l:left = strpart(getline('.'), 0, col('.')-1) .. '&'
-  for i in g:data
-    let l:pretended = trim(i['label'])
-
-    if has_key(i, 'textEdit') 
-      let l:pretended = i['textEdit']['newText']
-    endif
-
-    echom l:left .. l:pretended
-    let l:word = matchstr(l:left .. l:pretended, '\(.\+\)&\(\1\)\zs.*')
-    echom 'match: ' .. l:word
-    let l:item = {
-          \'word': l:word,
-          \'abbr': trim(i['label']),
-          \'menu': s:completion__kinds[i['kind']],
-          \'info': 'Work In Progress',
-          \}
-    call add(l:list, l:item )
-  endfor
-  return l:list
+  call Completion()
+  return -2
 endfunction
 
 
