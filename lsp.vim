@@ -15,14 +15,6 @@ if !has_key(g:lsp, 'cairo')
   \}
 endif
 
-"keymaps 
-function! s:Maps() abort
-  nnoremap <silent><buffer> K :call Hover()<CR>
-  nnoremap <silent><buffer> gd :call Definition()<CR>
-  nnoremap <silent><buffer> <space>w :call ForceSync()<CR>
-  nnoremap <silent><buffer> ]d :call NextDiagnostic()<CR>
-  nnoremap <silent><buffer> [d :call PreviousDiagnostic()<CR>
-endfunction
 
 let s:opt = {
   \'exit_cb': 's:LspExit',
@@ -141,28 +133,9 @@ function! s:initCallback(channel,response) abort
     call ch_sendexpr(a:channel, {'method':'initialized', 'params':{}})
   endif
 
-  execute 'au filetype ' . &filetype . ' call SetupBuffer()'
+  execute 'au filetype ' . &filetype . ' call SetupBuffer("' . &filetype . '")'
   let l:filetype = &filetype
-  bufdo call s:EnsureStart(l:filetype)
-endfunction
-
-
-function s:EnsureStart(type)
-  echom 'Ensure'
-  let l:buf = bufnr('%')
-  bufdo  if &filetype == a:type | call SetupBuffer() | endif 
-  execute 'buffer ' . l:buf
-endfunction
-
-function! SetupBuffer() abort
-  augroup LspBuferAu
-    autocmd! * <buffer>
-    au bufdelete <buffer> call DidClose(expand('<afile>:p'))
-    au bufenter <buffer> call ForceSync()  
-    au bufwritepost <buffer> call ForceSync()  
-  augroup END
-  call ForceSync()
-  call  s:Maps()
+  bufdo call g:EnsureStart(l:filetype)
 endfunction
 
 

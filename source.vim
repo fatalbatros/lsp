@@ -1,3 +1,4 @@
+source <sfile>:h/setup.vim
 source <sfile>:h/sync.vim
 source <sfile>:h/hover.vim
 source <sfile>:h/definition.vim
