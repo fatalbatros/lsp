@@ -32,7 +32,7 @@ function! s:OnComplete(channel, data) abort
 
     "TODO: si se saca el ^ de aca, puede hacer una especie de fuzzycomplete"
     let l:word = matchstr(l:label, '^' ..  l:last_word .. '\zs.*')
-    echom 'match: ' .. l:word
+"    echom 'match: ' .. l:word
     let l:item = {
           \'word': l:word,
           \'abbr': l:label,
@@ -43,15 +43,20 @@ function! s:OnComplete(channel, data) abort
     call add(l:list, l:item )
   endfor
 
-  echom l:list
+"  echom l:list
   call complete(col('.'), l:list)
 endfunction
 
 
 set <A-z>=z
 imap <A-z> :call Completion()<CR>
-set completeopt=menu,menuone,popup
+set completeopt=menu,menuone,popuphidden
 set omnifunc=OmniLsp
+
+augroup Completion
+  au!
+  au! CompleteChanged * call s:ShowExtraInfo()
+augroup END
 
 function! OmniLsp(findstart, base ) abort
   if a:findstart
@@ -60,6 +65,34 @@ function! OmniLsp(findstart, base ) abort
   call Completion()
   return -2
 endfunction
+
+
+function s:ShowExtraInfo() abort
+  let l:info = complete_info()
+  if l:info['mode'] != 'eval' | return | endif
+  if l:info['selected'] == -1 | return | endif
+  call ForceSync()
+  let l:hover = {
+    \ 'method':'textDocument/hover',
+    \ 'params': {
+    \ 'textDocument': {'uri': 'file://' . expand("%:p")},
+    \ 'position': {'line': getpos('.')[1]-1,
+        \ 'character': getpos('.')[2]-1,
+      \}
+    \ }
+  \ }
+  echom l:hover
+  let response = ch_evalexpr(g:lsp[&filetype]['channel'], l:hover)
+  if l:response['result'] == v:null | echo 'null response' | return | endif
+  let l:hover_text = l:response['result']['contents']['value']
+  let l:formated_text =  split(l:hover_text, '\r\n\|\r\|\n', v:true)
+  let l:id = popup_findinfo()
+  if l:id
+    call popup_settext(id, l:formated_text)
+  " call popup_setoptions(id,{} )
+    call popup_show(id)
+  endif
+endfunction 
 
 
 let s:completion__kinds = {
