@@ -12,6 +12,8 @@ DONE:
 - Diagnostics: The files are sync when opened. Use <space>w or :call ForceSync() to resync them.
   At the moment I do not know when should be optimal to sync the files. This will change in the future.
   The maps ]d and [d can be used to navigate throught diferent diagnostics.
+- Completion: The omnifunc (^X ^O) is set to use completion of the lsp. There is an overhead of 
+  showing the extra info en the popup menu of sync the file each time a new item is selected
 
 TODO:
 - Sync: At the moment the open files sync between server and clients is very sub-optimal. 
@@ -30,9 +32,9 @@ TODO:
   to set the position after go to definition, there also existe the vim cursor() function. The diference
   between them made me think that thece could be a problem.
 
-
-- Competions: I will have to write a function to parse the output of the completion request if I want 
-  to the vim omnifunction to handle the autocompetions.
+- Competions: At the moment, each time a new item is selected a new ForceSync() has to be triger in order
+  to get the hover info to display in the popup. There is a request completionItem/resolve that should
+  give extra information (if the server implement it) this would be optimal.
 
 - Load: I have to research the optimal way of autoload the client. At the moment I have an autocmd
   that sources the source.vim file while filetype is triger. I like the idea of only load the cliente
@@ -42,7 +44,5 @@ Tasks:
 - vim9 : ForceSync should  not handle the version of the file. 
 
 Next Planed Step:
-- Autocompletion:
-* Make the autocomplete request
-* Make the omnifunction for handle the response
+- I need to handle properlly the initialization request/options.
 
