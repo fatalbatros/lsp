@@ -79,9 +79,10 @@ def ShowDiagnostic(diagnostic: dict<any>)
   setcursorcharpos(line, col) 
   var options = {
     'pos': 'topleft',
+    'borderhighlight': ['LineNr'],
     'highlight': hi,
     'moved': 'any',
-    'border': [2, 2, 2, 2],
+    'border': [1, 1, 1, 1],
     'borderchars': ['─', '│', '─', '│', '┌', '┐', '┘', '└'], 
   }
   popup_atcursor(text, options)

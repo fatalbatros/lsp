@@ -50,10 +50,19 @@ def OnComplete(channel: channel, data: dict<any>)
     # TODO: hay que sortear la lista
     call add(list, item)
   endfor
+  list = sort(list, 'ByName')
 
   complete(col('.'), list)
 enddef
 
+def ByName(item1: dict<any>, item2: dict<any>): number
+  var label1 = item1['abbr']
+  var label2 = item1['abbr']
+  if label1 == label2 | return 0 | endif
+  var sorted = sort([label1, label2])
+  if label1 == sorted[0] | return -1 | endif
+  return 1
+enddef
 
 
 # augroup Completion
