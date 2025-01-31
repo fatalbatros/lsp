@@ -1,99 +1,99 @@
-"Configuration 
+vim9script
+# Configuration 
 if !exists("g:lsp")
-  let g:lsp = {}
+  g:lsp = {}
 endif
 
 if !has_key(g:lsp, 'typescript')
-  let g:lsp['typescript'] = {
-    \'cmd': ['typescript-language-server','--stdio'],
-  \}
+  g:lsp['typescript'] = {
+    'cmd': ['typescript-language-server', '--stdio'],
+  }
 endif
 
 if !has_key(g:lsp, 'cairo')
-  let g:lsp['cairo'] = {
-    \'cmd': ['scarb','cairo-language-server','/C','--node-ipc'],
-  \}
+  g:lsp['cairo'] = {
+    'cmd': ['scarb', 'cairo-language-server', '/C', '--node-ipc'],
+  }
 endif
 
+var opt = {
+  'exit_cb': 'LspExit',
+  'out_cb': 'LspStdout',
+  'err_cb': 'LspStderr',
+  'noblock': 1,
+  'in_mode': 'lsp',
+  'out_mode': 'lsp',
+}
 
-let s:opt = {
-  \'exit_cb': 's:LspExit',
-  \'out_cb': 's:LspStdout',
-  \'err_cb': 's:LspStderr',
-  \'noblock': 1,
-  \'in_mode': 'lsp',
-  \'out_mode': 'lsp',
-\}
-
-let s:capabilities = {
-  \'workspace' : {},
-  \'textDocument': {
-    \'hover': {
-      \'dynamicRegistration': v:false,
-      \'contentFormat': ['plaintext','markdown']
-    \},
-    \'syncrhonization': {
-      \'dynamicRegistration': v:false,
-      \'willSaveWaitUntil':v:false,
-      \'willSave': v:false,
-      \'didSave': v:true
-    \},
-    \'publishDiagnostics': {
-      \'relatedInformation': v:true,
-      \'versionSuport': v:true,
-      \'dynamicRegistration': v:false,
-    \},
-  \},
-\}
+var capabilities = {
+  'workspace': {},
+  'textDocument': {
+    'hover': {
+      'dynamicRegistration': v:false,
+      'contentFormat': ['plaintext', 'markdown']
+    },
+    'syncrhonization': {
+      'dynamicRegistration': v:false,
+      'willSaveWaitUntil': v:false,
+      'willSave': v:false,
+      'didSave': v:true
+    },
+    'publishDiagnostics': {
+      'relatedInformation': v:true,
+      'versionSuport': v:true,
+      'dynamicRegistration': v:false,
+    },
+  },
+}
 
 
-function! LspStart() abort
-  "start and restart the server
+export def g:LspStart()
+  # start and restart the server
   if !has_key(g:lsp, &filetype)
-    echoerr 'Lsp for ' . &filetype . ' not set'
+    echoerr 'Lsp for ' .. &filetype .. ' not set'
     return
-  elseif !has_key(g:lsp[&filetype],'cmd')
-    echoerr 'Lsp start command not defined for ' . &filetype
+  elseif !has_key(g:lsp[&filetype], 'cmd')
+    echoerr 'Lsp start command not defined for ' .. &filetype
     return
   elseif has_key(g:lsp[&filetype], 'job_id') 
     if ch_status(g:lsp[&filetype]['job_id']) == 'open'
-      echoerr 'Lsp for ' . &filetype . ' is running'
+      echoerr 'Lsp for ' .. &filetype .. ' is running'
       return
     else
-      call job_stop(g:lsp[&filetype]['job_id'])
+      job_stop(g:lsp[&filetype]['job_id'])
     endif
   endif
 
-  let cmd = g:lsp[&filetype]['cmd']
-  let job_id = job_start(cmd,s:opt)
-  let g:lsp[&filetype]['job_id'] = job_id
-  let g:lsp[&filetype]['channel'] = job_getchannel(job_id)
-  let g:lsp[&filetype]['files'] = {}
-  let g:diagnostics = {}
-  call s:LspInit()
-endfunction
+  var cmd = g:lsp[&filetype]['cmd']
+  var job_id = job_start(cmd, opt)
+  g:lsp[&filetype]['job_id'] = job_id
+  g:lsp[&filetype]['channel'] = job_getchannel(job_id)
+  g:lsp[&filetype]['files'] = {}
+  g:diagnostics = {}
+  LspInit()
+enddef
 
-function! LspStop()
-  if has_key(g:lsp, &filetype) && has_key(g:lsp[&filetype],'job_id')
-    call job_stop(g:lsp[&filetype]['job_id'])
+export def g:LspStop()
+  if has_key(g:lsp, &filetype) && has_key(g:lsp[&filetype], 'job_id')
+    job_stop(g:lsp[&filetype]['job_id'])
     unlet g:lsp[&filetype]['job_id']
     unlet g:lsp[&filetype]['channel']
   else
-    echom 'Lsp server for ' . &filetype . ' not found'
+    echom 'Lsp server for ' .. &filetype .. ' not found'
   endif
-endfunction
+enddef
 
-def s:LspStdout(channel: channel, data: dict<any>)
+def LspStdout(channel: channel, data: dict<any>)
   if has_key(data, 'method')
     if data['method'] == 'textDocument/publishDiagnostics'
-      s:publishDiagnosticsCB(data['params'])
+      PublishDiagnosticsCB(data['params'])
       return
     endif
   endif
   echom data
 enddef
 
-def s:publishDiagnosticsCB(params: dict<any>)
+def PublishDiagnosticsCB(params: dict<any>)
   var uri = params['uri']
   if bufexists(strpart(uri, 7))
     g:diagnostics[uri] = params['diagnostics']
@@ -101,41 +101,41 @@ def s:publishDiagnosticsCB(params: dict<any>)
   endif
 enddef
 
-function! s:LspStderr(channel, data) abort
+def  LspStderr(channel: channel, data: dict<any>)
   echom 'Error'
-  echom a:data
-endfunction
+  echom data
+enddef
 
-function! s:LspExit(job_id, exit_code) abort
-  echom 'LSP exited with status: ' . a:exit_code
-endfunction
+def LspExit(job_id: job, exit_code: number)
+  echom 'LSP exited with status: ' .. exit_code
+enddef
 
-function! s:LspInit() abort
+def LspInit()
   echom 'initialize'
-  let request = {
-    \   'method': 'initialize',
-    \   'params': {
-    \     'processId': getpid(),
-    \     'clientInfo': { 'name': 'lsp-joel', 'version':'0' },
-    \     'capabilities': s:capabilities,
-    \     'rootPath':expand("%:p:h"),
-    \     'rootURI':'file://'.expand("%:p:h").'/',
-    \     'trace': 'off',
-    \   },
-  \ }
-  call ch_sendexpr(g:lsp[&filetype]['channel'], request, {'callback':'s:initCallback'})
-endfunction
+  var request = {
+       'method': 'initialize',
+       'params': {
+         'processId': getpid(),
+         'clientInfo': {'name': 'lsp-joel', 'version': '0'},
+         'capabilities': capabilities,
+         'rootPath': expand("%:p:h"),
+         'rootURI': 'file://' .. expand("%:p:h") .. '/',
+         'trace': 'off',
+       },
+  }
+  ch_sendexpr(g:lsp[&filetype]['channel'], request, {'callback': 'InitCallback'})
+enddef
 
-function! s:initCallback(channel,response) abort
-  let g:init_response = a:response
-  if has_key(a:response,'result') && has_key(a:response['result'],'capabilities')
-    let g:capabilities = a:response['result']['capabilities']
-    call ch_sendexpr(a:channel, {'method':'initialized', 'params':{}})
+def InitCallback(channel: channel, response: dict<any>)
+  g:init_response = response
+  if has_key(response, 'result') && has_key(response['result'], 'capabilities')
+    g:capabilities = response['result']['capabilities']
+    ch_sendexpr(channel, {'method': 'initialized', 'params': {}})
   endif
 
-  execute 'au filetype ' . &filetype . ' call SetupBuffer("' . &filetype . '")'
-  let l:filetype = &filetype
-  bufdo call g:EnsureStart(l:filetype)
-endfunction
+  execute 'au filetype ' .. &filetype .. ' call SetupBuffer("' .. &filetype .. '")'
+  var filetype = &filetype
+  g:EnsureStart(filetype)
+enddef
 
 

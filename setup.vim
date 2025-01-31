@@ -13,6 +13,7 @@ def g:SetupBuffer(type: string)
   augroup LspBuferAu
     autocmd! * <buffer>
     au bufdelete <buffer> call DidClose(expand('<afile>:p'))
+    au bufenter <buffer> call ParseDiagnostics()
     au bufenter <buffer> call ForceSync()  
     au bufwritepost <buffer> call ForceSync()  
   augroup END
