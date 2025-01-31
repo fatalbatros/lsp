@@ -1,6 +1,6 @@
 vim9script
 
-def g:DidClose(file: string)
+export def DidClose(file: string)
   var uri = 'file://' .. file
   var filetype: string 
   var didClose = {
@@ -66,7 +66,7 @@ def DidChange(uri: string, version: number)
 enddef
 
 
-export def g:ForceSync()
+export def ForceSync()
   var uri = 'file://' .. expand("%:p")
   if !has_key(g:lsp[&filetype]['files'], uri)
     g:lsp[&filetype]['files'][uri] = {'bufer': bufnr(), 'version': 1}

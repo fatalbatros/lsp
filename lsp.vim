@@ -1,4 +1,6 @@
 vim9script
+import "./diagnostic.vim" as diag
+
 # Configuration 
 if !exists("g:lsp")
   g:lsp = {}
@@ -47,7 +49,7 @@ var capabilities = {
 }
 
 
-export def g:LspStart()
+def g:LspStart()
   # start and restart the server
   if !has_key(g:lsp, &filetype)
     echoerr 'Lsp for ' .. &filetype .. ' not set'
@@ -73,7 +75,7 @@ export def g:LspStart()
   LspInit()
 enddef
 
-export def g:LspStop()
+def g:LspStop()
   if has_key(g:lsp, &filetype) && has_key(g:lsp[&filetype], 'job_id')
     job_stop(g:lsp[&filetype]['job_id'])
     unlet g:lsp[&filetype]['job_id']
@@ -97,11 +99,11 @@ def PublishDiagnosticsCB(params: dict<any>)
   var uri = params['uri']
   if bufexists(strpart(uri, 7))
     g:diagnostics[uri] = params['diagnostics']
-    g:ParseDiagnostics()
+    diag.ParseDiagnostics()
   endif
 enddef
 
-def  LspStderr(channel: channel, data: dict<any>)
+def LspStderr(channel: channel, data: dict<any>)
   echom 'Error'
   echom data
 enddef
@@ -130,12 +132,12 @@ def InitCallback(channel: channel, response: dict<any>)
   g:init_response = response
   if has_key(response, 'result') && has_key(response['result'], 'capabilities')
     g:capabilities = response['result']['capabilities']
-    ch_sendexpr(channel, {'method': 'initialized', 'params': {}})
-  endif
 
-  execute 'au filetype ' .. &filetype .. ' call SetupBuffer("' .. &filetype .. '")'
-  var filetype = &filetype
-  g:EnsureStart(filetype)
+    ch_sendexpr(channel, {'method': 'initialized', 'params': {}})
+    execute 'au filetype ' .. &filetype .. ' call SetupBuffer("' .. &filetype .. '")'
+    var filetype = &filetype
+    g:EnsureStart(filetype)
+  endif
 enddef
 
 

@@ -1,9 +1,9 @@
 vim9script
 
-import "./sync.vim"
+import "./sync.vim" as sync
 
-def g:Hover()
-  g:ForceSync()
+export def Hover()
+  sync.ForceSync()
   const hover = {
      'method': 'textDocument/hover',
      'params': {
@@ -17,7 +17,6 @@ def g:Hover()
 enddef
 
 def HoverCallback(channel: channel, response: dict<any>)
-  echom 'HoverCallback'
   echom response
   #let g:response = a:response
   if response['result'] == v:null | echo 'null response' | return | endif

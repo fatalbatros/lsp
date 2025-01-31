@@ -1,11 +1,9 @@
 vim9script 
 
-import "./sync.vim"
+import "./sync.vim" as sync
 
-set completeopt=menu,menuone,popuphidden
-set omnifunc=OmniLsp
 
-def g:OmniLsp(findstart: number, base: string ): number
+export def OmniLsp(findstart: number, base: string ): number
   if findstart
     return col('.')
   else
@@ -15,7 +13,7 @@ def g:OmniLsp(findstart: number, base: string ): number
 enddef
 
 def Completion()
-  g:ForceSync()
+  sync.ForceSync()
   var request = {
       'method': 'textDocument/completion',
       'params': {
@@ -67,7 +65,7 @@ def ShowExtraInfo()
   var info = complete_info()
   if info['mode'] != 'eval' | return | endif
   if info['selected'] == -1 | return | endif
-  g:ForceSync()
+  sync.ForceSync()
   var hover = {
      'method': 'textDocument/hover',
      'params': {

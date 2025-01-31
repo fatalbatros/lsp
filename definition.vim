@@ -1,9 +1,9 @@
 vim9script
 
-import "./sync.vim"
+import "./sync.vim" as sync
 
-def g:Definition()
-  g:ForceSync()
+export def Definition()
+  sync.ForceSync()
   var request = {
     'method': 'textDocument/definition',
     'params': {

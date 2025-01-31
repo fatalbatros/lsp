@@ -14,7 +14,7 @@ prop_type_add('diagnosticWarningInline', { 'override': v:false})
 prop_type_add('diagnosticMark', {'priority': -1, 'override': v:false})
 
 
-def g:ParseDiagnostics()
+export def ParseDiagnostics()
   var uri = 'file://' .. expand("%:p")
   if !exists("g:diagnostics") | return | endif
   if !has_key(g:diagnostics, uri)
@@ -44,7 +44,7 @@ def g:ParseDiagnostics()
   endfor
 enddef
 
-def g:NextDiagnostic()
+export def NextDiagnostic()
   var diag = prop_find({'type': 'diagnosticMark', 'skipstart': v:true}, "f")
   if empty(diag) 
     echo "No more diagnostics"
@@ -53,7 +53,7 @@ def g:NextDiagnostic()
   call ShowDiagnostic(diag)
 enddef
 
-def g:PreviousDiagnostic()
+export def PreviousDiagnostic()
   var diag = prop_find({'type': 'diagnosticMark', 'skipstart': v:true}, "b")
   if empty(diag) 
     echo "No more diagnostics"
