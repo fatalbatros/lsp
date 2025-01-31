@@ -134,9 +134,7 @@ def InitCallback(channel: channel, response: dict<any>)
     g:capabilities = response['result']['capabilities']
 
     ch_sendexpr(channel, {'method': 'initialized', 'params': {}})
-    execute 'au filetype ' .. &filetype .. ' call SetupBuffer("' .. &filetype .. '")'
-    var filetype = &filetype
-    g:EnsureStart(filetype)
+    g:EnsureStart()
   endif
 enddef
 

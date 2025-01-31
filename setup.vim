@@ -6,8 +6,10 @@ import "./definition.vim" as def
 import "./diagnostic.vim" as diag
 import "./completion.vim" as comp
 
-set completeopt=menu,menuone,popuphidden
-set omnifunc=comp.OmniLsp
+def SetLocal()
+  set completeopt=menu,menuone,popuphidden
+  setlocal omnifunc=comp.OmniLsp
+enddef
 
 def Maps()
   nnoremap <silent><buffer> K :call <SID>hov.Hover()<CR>
@@ -17,9 +19,11 @@ def Maps()
   nnoremap <silent><buffer> [d :call <SID>diag.PreviousDiagnostic()<CR>
 enddef
 
-def g:EnsureStart(type: string)
+def g:EnsureStart()
+  var setup = expand('<SID>') .. 'SetupBuffer("' .. &filetype .. '")'
+  execute 'au filetype ' .. &filetype .. ' call ' .. setup
   var buf = bufnr('%')
-  execute 'bufdo call ' .. expand('<SID>') .. 'SetupBuffer("' ..  type .. '")'
+  execute 'bufdo call ' .. setup
  execute 'buffer ' .. buf
 enddef
 
@@ -32,6 +36,7 @@ def g:SetupBuffer(type: string)
     au bufenter <buffer> call <SID>sync.ForceSync()  
     au bufwritepost <buffer> call <SID>sync.ForceSync()  
   augroup END
+  SetLocal()
   sync.ForceSync()
   Maps()
 enddef
