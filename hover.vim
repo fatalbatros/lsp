@@ -22,7 +22,7 @@ def HoverCallback(channel: channel, response: dict<any>)
   if response['result'] == v:null | echo 'null response' | return | endif
   const hover_text = response['result']['contents']['value']
   const options = {
-    'border': [2, 2, 2, 2],
+    'border': [1, 1, 1, 1],
     'highlight': 'Normal',
     'borderhighlight': ['LineNr'],
      borderchars: ['─', '│', '─', '│', '┌', '┐', '┘', '└'], 

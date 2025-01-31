@@ -14,9 +14,17 @@ prop_type_add('diagnosticWarningInline', { 'override': v:false})
 prop_type_add('diagnosticMark', {'priority': -1, 'override': v:false})
 
 
+export def PublishDiagnosticsCB(params: dict<any>)
+  var uri = params['uri']
+  var file = matchstr(uri, 'file://\zs.*')
+  if !file | return | endif
+  if !bufexists(file) | return | endif
+  g:diagnostics[uri] = params['diagnostics']
+  ParseDiagnostics()
+enddef
+
 export def ParseDiagnostics()
   var uri = 'file://' .. expand("%:p")
-  if !exists("g:diagnostics") | return | endif
   if !has_key(g:diagnostics, uri)
     return
   endif

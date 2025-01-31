@@ -28,11 +28,26 @@ var opt = {
 }
 
 var capabilities = {
-  'workspace': {},
+  'workspace': {
+    'workspaceFolders': v:false,
+    'configuration': v:false,
+    'symbol': {'dynamicRegistration': v:false},
+    'applyEdit': v:false
+  },
   'textDocument': {
     'hover': {
       'dynamicRegistration': v:false,
-      'contentFormat': ['plaintext', 'markdown']
+      'contentFormat': ["plaintext"]
+    },
+    'completion': {
+      'dynamicRegistration': v:false,
+      'completionItem': {
+        'snippetSupport': v:false,
+        'documentationFormat': ["plaintext"],
+        'preselectSupport': v:false
+      },
+      'insertReplaceSupport': v:false,
+      'contextSupport': v:false,
     },
     'syncrhonization': {
       'dynamicRegistration': v:false,
@@ -42,8 +57,10 @@ var capabilities = {
     },
     'publishDiagnostics': {
       'relatedInformation': v:true,
-      'versionSuport': v:true,
+      'versionSuport': v:false,
       'dynamicRegistration': v:false,
+      'dataSupport': v:false,
+      'codeDescriptionSupport': v:false,
     },
   },
 }
@@ -88,19 +105,11 @@ enddef
 def LspStdout(channel: channel, data: dict<any>)
   if has_key(data, 'method')
     if data['method'] == 'textDocument/publishDiagnostics'
-      PublishDiagnosticsCB(data['params'])
+      diag.PublishDiagnosticsCB(data['params'])
       return
     endif
   endif
   echom data
-enddef
-
-def PublishDiagnosticsCB(params: dict<any>)
-  var uri = params['uri']
-  if bufexists(strpart(uri, 7))
-    g:diagnostics[uri] = params['diagnostics']
-    diag.ParseDiagnostics()
-  endif
 enddef
 
 def LspStderr(channel: channel, data: dict<any>)
