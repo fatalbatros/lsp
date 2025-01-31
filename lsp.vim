@@ -1,5 +1,6 @@
 vim9script
 import "./diagnostic.vim" as diag
+import "./setup.vim" as setup
 
 # Configuration 
 if !exists("g:lsp")
@@ -134,16 +135,19 @@ def LspInit()
          'trace': 'off',
        },
   }
-  ch_sendexpr(g:lsp[&filetype]['channel'], request, {'callback': 'InitCallback'})
+  ch_sendexpr(g:lsp[&filetype]['channel'], request, {'callback': 's:InitCallback'})
 enddef
 
 def InitCallback(channel: channel, response: dict<any>)
   g:init_response = response
   if has_key(response, 'result') && has_key(response['result'], 'capabilities')
     g:capabilities = response['result']['capabilities']
-
+    # There is an error here that happend only in the cairo lsp. I think it is
+    # answring this notification with an empty string and the channel is
+    # trying to decode it. The error is inofensive.
+    # TODO: Decide what to do
     ch_sendexpr(channel, {'method': 'initialized', 'params': {}})
-    g:EnsureStart()
+    setup.EnsureStart()
   endif
 enddef
 

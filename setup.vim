@@ -19,7 +19,7 @@ def Maps()
   nnoremap <silent><buffer> [d :call <SID>diag.PreviousDiagnostic()<CR>
 enddef
 
-def g:EnsureStart()
+export def EnsureStart()
   var setup = expand('<SID>') .. 'SetupBuffer("' .. &filetype .. '")'
   execute 'au filetype ' .. &filetype .. ' call ' .. setup
   var buf = bufnr('%')
@@ -27,7 +27,7 @@ def g:EnsureStart()
  execute 'buffer ' .. buf
 enddef
 
-def g:SetupBuffer(type: string)
+def SetupBuffer(type: string)
   if &filetype != type | return | endif
   augroup LspBuferAu
     autocmd! * <buffer>
