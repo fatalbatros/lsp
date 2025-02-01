@@ -13,6 +13,7 @@ call prop_type_add('diagnosticMark',{'priority': -1, 'override': v:false})
 
 
 function! ParseDiagnostics() abort
+  if !g:show_diagnostic | return | endif
   let l:uri = 'file://' . expand("%:p")
   if !exists("g:diagnostics") | return | endif
   if !has_key(g:diagnostics, l:uri)

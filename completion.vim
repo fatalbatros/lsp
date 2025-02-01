@@ -1,4 +1,6 @@
 function Completion() abort
+  let g:show_diagnostic = v:false
+  au completedone <buffer> ++once  let g:show_diagnostic=v:true
   call ForceSync()
   let l:request = {
       \'method': 'textDocument/completion',
@@ -27,36 +29,44 @@ function! s:OnComplete(channel, data) abort
   let l:list = []
   let l:left = strpart(getline('.'), 0, col('.')-1)
   let l:last_word = matchstr(l:left, '\(\k*$\)')
+  echom l:last_word
   for i in l:data
     let l:label = trim(i['label'])
-
+    echom l:label
     "TODO: si se saca el ^ de aca, puede hacer una especie de fuzzycomplete"
     let l:word = matchstr(l:label, '^' ..  l:last_word .. '\zs.*')
-"    echom 'match: ' .. l:word
+    echom 'match: ' .. l:word
     let l:item = {
           \'word': l:word,
           \'abbr': l:label,
           \'menu': s:completion__kinds[i['kind']],
           \'info': 'Work In Progress',
           \}
-    "TODO: hay que sortear la lista
     call add(l:list, l:item )
   endfor
-
-"  echom l:list
+  echom l:list
+  let l:list = sort(l:list, 's:ByName')
   call complete(col('.'), l:list)
 endfunction
 
+function! s:ByName(item1, item2) abort
+  let label1 = a:item1['abbr']
+  let label2 = a:item2['abbr']
+  if label1 == label2 | return 0 | endif
+  let sorted = sort([label1, label2])
+  if label1 == sorted[0] | return -1 | endif
+  return 1
+endfunction
 
-set <A-z>=z
-imap <A-z> :call Completion()<CR>
+"set <A-z>=z
+"imap <A-z> :call Completion()<CR>
 set completeopt=menu,menuone,popuphidden
 set omnifunc=OmniLsp
 
-augroup Completion
-  au!
-  au! CompleteChanged * call s:ShowExtraInfo()
-augroup END
+"augroup Completion
+"  au!
+"  au! CompleteChanged * call s:ShowExtraInfo()
+"augroup END
 
 function! OmniLsp(findstart, base ) abort
   if a:findstart

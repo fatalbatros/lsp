@@ -78,6 +78,7 @@ function! LspStart() abort
   let g:lsp[&filetype]['channel'] = job_getchannel(job_id)
   let g:lsp[&filetype]['files'] = {}
   let g:diagnostics = {}
+  let g:show_diagnostic = v:true
   call s:LspInit()
 endfunction
 

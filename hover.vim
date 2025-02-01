@@ -19,11 +19,13 @@ function! s:HoverCallback(channel,response) abort
   if a:response['result'] == v:null | echo 'null response' | return | endif
   let l:hover_text = a:response['result']['contents']['value']
   let l:options = {
-    \'border':[2,2,2,2],
+    \'border':[1,1,1,1],
     \'highlight':'Normal',
-    \'borderchars':['-','|','-','|','+','+','+','+'],
+    \'borderhighlight': ['LineNr'],
+    \'borderchars': ['─', '│', '─', '│', '┌', '┐', '┘', '└'], 
     \'moved':'word'
   \}
+"    'borderchars':['-','|','-','|','+','+','+','+'],
   let l:formated_text =  split(l:hover_text, '\r\n\|\r\|\n', v:true)
   call popup_atcursor(l:formated_text,l:options)
 endfunction
