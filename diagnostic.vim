@@ -45,7 +45,12 @@ export def ParseDiagnostics()
     var line = i['range']['start']['line'] + 1
     var char = i['range']['start']['character'] + 1
     var text = i['message']
-    prop_add(line, 0, {'type': type, 'text': text, 'text_align': 'right', 'text_wrap': 'truncate'})
+    var props = prop_list(line)
+    # This is for showing only a single message inline. 
+    # TODO: Be shure to show a high serverity error
+    if empty(props)
+        prop_add(line, 0, {'type': type, 'text': text, 'text_align': 'right', 'text_wrap': 'truncate'})
+    endif
     prop_add(line, char + pad, {'type': type .. 'Inline' })
     prop_add(line, char + pad, {'type': 'diagnosticMark', 'id': idx })
     b:diagnostic_text[idx] = {'text': text, 'highlight': hiType[type] }
@@ -53,6 +58,7 @@ export def ParseDiagnostics()
   endfor
 enddef
 
+# TODO: Make these functions to wrap arround the file.
 export def NextDiagnostic()
   var diag = prop_find({'type': 'diagnosticMark', 'skipstart': v:true}, "f")
   if empty(diag) 
