@@ -40,9 +40,11 @@ TODO:
   that sources the source.vim file while filetype is triger. I like the idea of only load the cliente
   when you open a filetype that has a server configured. 
 
-Tasks:
-- vim9 : ForceSync should  not handle the version of the file. 
+Task:
+- A function to find the root directory. (I dont undersand what would happend to the server if a pass the 
+  rootUri parameter correctlly)
 
 Next Planed Step:
-- I need to handle properlly the initialization request/options.
+- Test the client 
+
 
