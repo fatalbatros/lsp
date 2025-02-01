@@ -19,10 +19,16 @@ if !has_key(g:lsp, 'cairo')
   }
 endif
 
+if !has_key(g:lsp, 'rust')
+  g:lsp['rust'] = {
+    'cmd': ['rust-analyzer'],
+  }
+endif
+
 var opt = {
-  'exit_cb': 'LspExit',
+#   'err_cb': 'LspStderr',
+#   'exit_cb': 'LspExit',
   'out_cb': 'LspStdout',
-  'err_cb': 'LspStderr',
   'noblock': 1,
   'in_mode': 'lsp',
   'out_mode': 'lsp',
@@ -70,14 +76,20 @@ var capabilities = {
 def g:LspStart()
   # start and restart the server
   if !has_key(g:lsp, &filetype)
-    echoerr 'Lsp for ' .. &filetype .. ' not set'
+    echohl ErrorMsg
+    echo 'Lsp for ' .. &filetype .. ' not set'
+    echohl Normal
     return
   elseif !has_key(g:lsp[&filetype], 'cmd')
-    echoerr 'Lsp start command not defined for ' .. &filetype
+    echohl ErrorMsg
+    echo 'Lsp start command for ' .. &filetype .. ' is not defined'
+    echohl Normal
     return
   elseif has_key(g:lsp[&filetype], 'job_id') 
     if ch_status(g:lsp[&filetype]['job_id']) == 'open'
-      echoerr 'Lsp for ' .. &filetype .. ' is running'
+      echohl Added
+      echo 'Lsp for ' .. &filetype .. ' is already running'
+      echohl Normal
       return
     else
       job_stop(g:lsp[&filetype]['job_id'])
@@ -88,7 +100,7 @@ def g:LspStart()
   var job_id = job_start(cmd, opt)
   g:lsp[&filetype]['job_id'] = job_id
   g:lsp[&filetype]['channel'] = job_getchannel(job_id)
-  g:lsp[&filetype]['files'] = {}
+  g:synchronized = {}
   g:diagnostics = {}
   g:show_diagnostic = v:true
   LspInit()
@@ -114,6 +126,9 @@ def LspStdout(channel: channel, data: dict<any>)
   echom data
 enddef
 
+# On error some servers (cairo) send a response that is no encoded in json
+# format. The channel set to "lsp" fails to decode it. An this throw an error.
+# At the moment Im not seting a callback for errors.
 def LspStderr(channel: channel, data: dict<any>)
   echom 'Error'
   echom data
@@ -143,13 +158,33 @@ def InitCallback(channel: channel, response: dict<any>)
   g:init_response = response
   if has_key(response, 'result') && has_key(response['result'], 'capabilities')
     g:capabilities = response['result']['capabilities']
-    # There is an error here that happend only in the cairo lsp. I think it is
-    # answring this notification with an empty string and the channel is
-    # trying to decode it. The error is inofensive.
-    # TODO: Decide what to do
     ch_sendexpr(channel, {'method': 'initialized', 'params': {}})
     setup.EnsureStart()
   endif
 enddef
 
+def g:LspStatus()
+  for i in keys(g:lsp)
+    echon i .. ' : '
+    PrintStatus(i)
+    echo '' 
+  endfor
+enddef
+
+def PrintStatus(filetype: string)
+  var server = g:lsp[filetype]
+  if !has_key(server, 'job_id')
+    echon 'NOT STARTED "' .. join(server['cmd']) .. '"'
+    return
+  endif
+  var info = job_info(server['job_id'])
+  if info['status'] == 'run'
+    echohl Added | echon 'RUNNING ' | echohl Normal
+    echon info['process']
+  elseif info['status'] == 'fail'
+    echohl ErrorMsg | echon 'FAILED' | echohl Normal
+  elseif info['status'] == 'dead' 
+    echohl ErrorMsg | echon 'STOPED ' | echohl Normal
+  endif
+enddef
 

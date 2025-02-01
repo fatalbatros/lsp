@@ -30,11 +30,11 @@ export def ParseDiagnostics()
     return
   endif
   call prop_clear(1, line('$'))
-  b:diag = g:diagnostics[uri]
+  b:diagnostics = g:diagnostics[uri]
   b:diagnostic_text = {}
 
   var idx = 1
-  for i in b:diag
+  for i in b:diagnostics
     # the pad is temporal to see first the error and then the warnings
     var pad = 1
     var type = 'diagnosticWarning'
@@ -58,12 +58,14 @@ export def ParseDiagnostics()
   endfor
 enddef
 
-# TODO: Make these functions to wrap arround the file.
 export def NextDiagnostic()
   var diag = prop_find({'type': 'diagnosticMark', 'skipstart': v:true}, "f")
   if empty(diag) 
-    echo "No more diagnostics"
-    return
+    diag = prop_find({'type': 'diagnosticMark', 'skipstart': v:false, 'lnum': 1, 'col': 1}, "f")
+    if empty(diag)
+      echo "No more diagnostics"
+      return
+    endif
   endif
   call ShowDiagnostic(diag)
 enddef
@@ -71,8 +73,13 @@ enddef
 export def PreviousDiagnostic()
   var diag = prop_find({'type': 'diagnosticMark', 'skipstart': v:true}, "b")
   if empty(diag) 
-    echo "No more diagnostics"
-    return
+    var line = getpos('$')[1]
+    var col = getpos('$')[2]
+    diag = prop_find({'type': 'diagnosticMark', 'skipstart': v:false, 'lnum': line, 'col': col}, "b")
+    if empty(diag)
+      echo "No more diagnostics"
+      return
+    endif
   endif
   ShowDiagnostic(diag)
 enddef

@@ -2,7 +2,6 @@ vim9script
 
 export def DidClose(file: string)
   var uri = 'file://' .. file
-  var filetype: string 
   var didClose = {
     'method': 'textDocument/didClose',
     'params': {
@@ -11,20 +10,12 @@ export def DidClose(file: string)
       },
     },
   }
-
-  for ft in keys(g:lsp)
-    if !has_key(g:lsp[ft], 'files') | continue | endif
-    if has_key(g:lsp[ft]['files'], uri)
-      filetype = ft
-    endif
-  endfor
-
+  
+  var filetype = g:synchronized[uri]['filetype']
   ch_sendexpr(g:lsp[filetype]['channel'], didClose)
-  unlet g:lsp[filetype]['files'][uri]
-  if exists("g:diagnostics")
-    if has_key(g:diagnostics, uri)
-      unlet g:diagnostics[uri] 
-    endif
+  unlet g:synchronized[uri]
+  if has_key(g:diagnostics, uri)
+    unlet g:diagnostics[uri] 
   endif
 enddef
 
@@ -68,14 +59,14 @@ enddef
 
 export def ForceSync()
   var uri = 'file://' .. expand("%:p")
-  if !has_key(g:lsp[&filetype]['files'], uri)
-    g:lsp[&filetype]['files'][uri] = {'bufer': bufnr(), 'version': 1}
+  if !has_key(g:synchronized, uri)
+    g:synchronized[uri] = {'bufer': bufnr(), 'version': 1, 'filetype': &filetype}
     b:sync_changedtick = b:changedtick
     DidOpen(uri)
   else
     if b:sync_changedtick != b:changedtick
-      var new_version = g:lsp[&filetype]['files'][uri]['version'] + 1
-      g:lsp[&filetype]['files'][uri]['version'] = new_version
+      var new_version = g:synchronized[uri]['version'] + 1
+      g:synchronized[uri]['version'] = new_version
       b:sync_changedtick = b:changedtick
       DidChange(uri, new_version)
     endif
