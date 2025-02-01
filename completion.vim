@@ -13,6 +13,8 @@ export def OmniLsp(findstart: number, base: string ): number
 enddef
 
 def Completion()
+  g:show_diagnostic = v:false
+  au completedone <buffer> ++once g:show_diagnostic = v:true
   sync.ForceSync()
   var request = {
       'method': 'textDocument/completion',
@@ -47,7 +49,6 @@ def OnComplete(channel: channel, data: dict<any>)
           'menu': completion__kinds[i['kind']],
           'info': 'Work In Progress',
           }
-    # TODO: hay que sortear la lista
     call add(list, item)
   endfor
   list = sort(list, 'ByName')
@@ -57,7 +58,7 @@ enddef
 
 def ByName(item1: dict<any>, item2: dict<any>): number
   var label1 = item1['abbr']
-  var label2 = item1['abbr']
+  var label2 = item2['abbr']
   if label1 == label2 | return 0 | endif
   var sorted = sort([label1, label2])
   if label1 == sorted[0] | return -1 | endif

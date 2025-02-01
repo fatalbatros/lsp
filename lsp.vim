@@ -90,6 +90,7 @@ def g:LspStart()
   g:lsp[&filetype]['channel'] = job_getchannel(job_id)
   g:lsp[&filetype]['files'] = {}
   g:diagnostics = {}
+  g:show_diagnostic = v:true
   LspInit()
 enddef
 

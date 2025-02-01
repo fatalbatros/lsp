@@ -24,6 +24,7 @@ export def PublishDiagnosticsCB(params: dict<any>)
 enddef
 
 export def ParseDiagnostics()
+  if !g:show_diagnostic | return | endif
   var uri = 'file://' .. expand("%:p")
   if !has_key(g:diagnostics, uri)
     return
