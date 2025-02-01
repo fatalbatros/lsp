@@ -35,6 +35,8 @@ def SetupBuffer(type: string)
     au bufenter <buffer> call <SID>diag.ParseDiagnostics()
     au bufenter <buffer> call <SID>sync.ForceSync()  
     au bufwritepost <buffer> call <SID>sync.ForceSync()  
+    au insertleave <buffer> call <SID>sync.ForceSync()  
+    au textchanged <buffer> call <SID>sync.ForceSync()  
   augroup END
   SetLocal()
   sync.ForceSync()
