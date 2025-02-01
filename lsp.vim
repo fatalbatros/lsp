@@ -161,6 +161,9 @@ function! SetupBuffer() abort
     au bufenter <buffer> call ParseDiagnostics()  
     au bufdelete <buffer> call DidClose(expand('<afile>:p')) 
     au bufenter <buffer> call ForceSync()  
+    au bufwritepost <buffer> call ForceSync()  
+    au insertleave <buffer> call ForceSync()  
+    au textchanged <buffer> call ForceSync()  
   augroup END
   call ForceSync()
   call  s:Maps()

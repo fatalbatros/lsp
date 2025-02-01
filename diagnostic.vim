@@ -36,7 +36,12 @@ function! ParseDiagnostics() abort
     let l:line = i['range']['start']['line'] + 1
     let l:char = i['range']['start']['character'] + 1
     let l:text = i['message']
-    call prop_add(l:line,0,{'type': l:type , 'text':l:text,'text_align':'right', 'text_wrap':'truncate'})
+    let l:props = prop_list(l:line)
+    " This is for show only one inline error
+    " TODO: Be shure to show a relevant error
+    if empty(l:props)
+      call prop_add(l:line,0,{'type': l:type , 'text':l:text,'text_align':'right', 'text_wrap':'truncate'})
+    endif
     call prop_add(l:line,l:char + l:pad ,{'type': l:type . 'Inline' })
     call prop_add(l:line,l:char + l:pad,{'type': 'diagnosticMark','id': l:idx })
     let b:diagnostic_text[l:idx] = {'text': l:text, 'highlight': s:hiType[l:type] }
