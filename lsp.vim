@@ -27,7 +27,7 @@ endif
 
 var opt = {
 #   'err_cb': 'LspStderr',
-#   'exit_cb': 'LspExit',
+  'exit_cb': 'LspExit',
   'out_cb': 'LspStdout',
   'noblock': 1,
   'in_mode': 'lsp',
@@ -116,6 +116,7 @@ def g:LspStop()
   endif
 enddef
 
+
 def LspStdout(channel: channel, data: dict<any>)
   if has_key(data, 'method')
     if data['method'] == 'textDocument/publishDiagnostics'
@@ -135,7 +136,14 @@ def LspStderr(channel: channel, data: dict<any>)
 enddef
 
 def LspExit(job_id: job, exit_code: number)
-  echom 'LSP exited with status: ' .. exit_code
+  var buf = bufnr('%')
+  bufdo call prop_clear(1, line('$'))
+  execute 'buffer ' .. buf
+  augroup LspBuferAu
+    autocmd! * <buffer>
+  augroup END
+  echohl ErrorMsg | echom 'F for the LSP' | echohl Normal
+  # TODO: This removes all autocomans and all diagnostics for all buffers. Change this to bufer specifics to the lsp  
 enddef
 
 def LspInit()
