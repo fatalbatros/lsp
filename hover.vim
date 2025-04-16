@@ -29,6 +29,7 @@ def HoverCallback(channel: channel, response: dict<any>)
     'moved': 'word',
   }
   const formated_text =  split(hover_text, '\r\n\|\r\|\n', v:true)
-  popup_atcursor(formated_text, options)
+#   popup_atcursor(formated_text, options)
+  popup_create(formated_text, options)
 enddef
 

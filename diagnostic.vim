@@ -44,6 +44,13 @@ export def ParseDiagnostics()
     endif
     var line = i['range']['start']['line'] + 1
     var char = i['range']['start']['character'] + 1
+
+    # this is to avoid trying to print in a line that does not exist anymore. 
+    var max_col = strlen(getline(line)) + 1
+    if char >= max_col
+      continue
+    endif
+
     var text = i['message']
     var props = prop_list(line)
     # This is for showing only a single message inline. 
