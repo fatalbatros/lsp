@@ -142,8 +142,25 @@ def LspExit(job_id: job, exit_code: number)
   augroup LspBuferAu
     autocmd! * <buffer>
   augroup END
-  echohl ErrorMsg | echom 'F for the LSP' | echohl Normal
+  #echohl ErrorMsg | echom 'F for the LSP' | echohl Normal
   # TODO: This removes all autocomans and all diagnostics for all buffers. Change this to bufer specifics to the lsp  
+enddef
+
+def g:LspClean() 
+  const bufers = getbufinfo({buflisted: 1, bufloaded: 1})
+  var lista = []
+  for bufer in bufers
+    const n = bufer['bufnr']
+    echom n
+    if getbufvar(n, '&filetype') == 'typescript'
+      echom "asde"
+      call prop_clear(1, line('$'), {bufnr: n })
+      # TODO: meter el filetype en el LspBuferAu, es mas facil limpiarlo.
+      augroup LspBuferAu
+        autocmd! * <buffer=n>
+      augroup END
+    endif
+  endfor
 enddef
 
 def LspInit()
