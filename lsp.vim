@@ -25,6 +25,12 @@ if !has_key(g:lsp, 'rust')
   }
 endif
 
+if !has_key(g:lsp, 'lua')
+  g:lsp['lua'] = {
+    'cmd': ['lua-language-server'],
+  }
+endif
+
 var opt = {
 #   'err_cb': 'LspStderr',
   'exit_cb': 'LspExit',
