@@ -19,6 +19,7 @@ export def PublishDiagnosticsCB(params: dict<any>)
   var file = matchstr(uri, 'file://\zs.*')
   if !file | return | endif
   if !bufexists(file) | return | endif
+  g:diagnostics[uri] = []
   g:diagnostics[uri] = params['diagnostics']
   ParseDiagnostics()
 enddef
@@ -35,13 +36,22 @@ export def ParseDiagnostics()
 
   var idx = 1
   for i in b:diagnostics
-    # the pad is temporal to see first the error and then the warnings
+    
+
+#     var type = 'diagnosticError'
+#     var pad = 0
+#     if i['severity'] != 1
+#       continue
+#     endif
+
+  # the pad is temporal to see first the error and then the warnings
     var pad = 1
     var type = 'diagnosticWarning'
     if i['severity'] == 1
       pad = 0
       type = 'diagnosticError'
     endif
+
     var line = i['range']['start']['line'] + 1
     var char = i['range']['start']['character'] + 1
 
