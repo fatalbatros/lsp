@@ -4,6 +4,7 @@ At the moment I will be testing with typescript lsp. The to "configure" a server
 
 To "load" the client just source the source.vim file and call LspStart() from a file. 
 
+WARNING: Current state of the plugin is build to be added with packadd, so this repo should be cloned in /pack/name/opt/lsp/plugin. I dont know when I will be able to tidy up this.
 
 DONE: 
 - Hover: call Hover() or use K

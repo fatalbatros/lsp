@@ -7,11 +7,25 @@ var hiType = {
   'diagnosticWarningInline': 'WarningMsg',
 }
 
-prop_type_add('diagnosticError', {'highlight': hiType['diagnosticError']})
-prop_type_add('diagnosticErrorInline', { 'overrride': v:false})
-prop_type_add('diagnosticWarning', {'highlight': hiType['diagnosticWarning']})
-prop_type_add('diagnosticWarningInline', { 'override': v:false})
-prop_type_add('diagnosticMark', {'priority': -1, 'override': v:false})
+if empty(prop_type_get('diagnosticError'))
+  prop_type_add('diagnosticError', {'highlight': hiType['diagnosticError']})
+endif
+
+if empty(prop_type_get('diagnosticErrorInline'))
+  prop_type_add('diagnosticErrorInline', { 'override': v:false})
+endif
+
+if empty(prop_type_get('diagnosticWarning'))
+  prop_type_add('diagnosticWarning', {'highlight': hiType['diagnosticWarning']})
+endif
+
+if empty(prop_type_get('diagnosticWarningInline'))
+  prop_type_add('diagnosticWarningInline', { 'override': v:false})
+endif
+
+if empty(prop_type_get('diagnosticMark'))
+  prop_type_add('diagnosticMark', {'priority': -1, 'override': v:false})
+endif
 
 
 export def PublishDiagnosticsCB(params: dict<any>)
