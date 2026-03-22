@@ -12,7 +12,7 @@ def SetLocal()
 enddef
 
 def Maps()
-  nnoremap <silent><buffer> K :call <SID>hov.Hover()<CR>
+  nnoremap <silent><buffer> K :call <SID>hov.HoverOrPreview()<CR>
   nnoremap <silent><buffer> gd :call <SID>def.Definition()<CR>
   nnoremap <silent><buffer> <space>w :call <SID>sync.ForceSync()<CR>
   nnoremap <silent><buffer> ]d :call <SID>diag.NextDiagnostic()<CR>

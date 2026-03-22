@@ -2,14 +2,41 @@ vim9script
 
 import "./sync.vim" as sync
 
-export def Hover()
+
+var last_hover: list<string> = []
+var hover_id = -1
+
+def OnHoverClose(id: number, _: any) 
+    hover_id = -1
+enddef
+
+const popup_options = {
+    'border': [1, 1, 1, 1],
+    'highlight': 'Normal',
+    'borderhighlight': ['LineNr'],
+     borderchars: ['─', '│', '─', '│', '┌', '┐', '┘', '└'], 
+    'moved': 'word',
+    'callback': function('OnHoverClose')
+}
+
+
+export def HoverOrPreview() 
+   if hover_id != -1 && !empty(popup_getpos(hover_id))
+        popup_close(hover_id)
+        HoverPreview()
+    else
+        Hover()
+    endif 
+enddef
+
+def Hover()
   sync.ForceSync()
   const hover = {
      'method': 'textDocument/hover',
      'params': {
      'textDocument': {'uri': 'file://' .. expand("%:p") },
      'position': {'line': getpos('.')[1] - 1,
-        'character': getpos('.')[2],
+        'character': charcol('.') - 1,
       }
      }
    }
@@ -17,19 +44,51 @@ export def Hover()
 enddef
 
 def HoverCallback(channel: channel, response: dict<any>)
-  echom response
-  #let g:response = a:response
-  if response['result'] == v:null | echo 'null response' | return | endif
-  const hover_text = response['result']['contents']['value']
-  const options = {
-    'border': [1, 1, 1, 1],
-    'highlight': 'Normal',
-    'borderhighlight': ['LineNr'],
-     borderchars: ['─', '│', '─', '│', '┌', '┐', '┘', '└'], 
-    'moved': 'word',
-  }
-  const formated_text =  split(hover_text, '\r\n\|\r\|\n', v:true)
-#   popup_atcursor(formated_text, options)
-  popup_create(formated_text, options)
+    g:lsp_hover_response = response
+    if response['result'] == v:null | return | endif
+    if response['result']['contents'] == v:null | return | endif
+
+    const lines = Parse_hover_response(response.result.contents)
+    if empty(lines) | return | endif
+    last_hover = lines
+
+    const id = popup_create(lines, popup_options)
+    hover_id = id
+
+    call win_execute(id, 'setlocal filetype=markdown')
+    call win_execute(id, 'syntax match markdownError "\w\@<=\w\@="')
 enddef
 
+
+def Parse_hover_response(contents: any): list<string>
+    var parsed: list<string> = []
+    if type(contents) == type("")
+        parsed = split(contents, '\r\n\|\r\|\n', v:true)
+
+    elseif type(contents) == type({}) 
+        if !has_key(contents, "value") | return [] | endif
+        parsed =  split(contents.value, '\r\n\|\r\|\n', v:true)
+
+    elseif type(contents) == type([])
+        for c in contents 
+            parsed += Parse_hover_response(c)
+        endfor
+    endif
+
+    return parsed
+enddef
+
+export def HoverPreview() 
+    if empty(last_hover) | return | endif
+    vertical pedit preview
+    wincmd P
+    vertical resize 65
+    setlocal buftype=nofile bufhidden=wipe noswapfile nobuflisted
+
+    setlocal modifiable
+    call setline(1, last_hover)
+    setlocal nomodifiable
+
+    setlocal filetype=markdown
+    syntax match markdownError "\w\@<=\w\@="
+enddef
