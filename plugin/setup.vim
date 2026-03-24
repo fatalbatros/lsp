@@ -7,8 +7,9 @@ import "./diagnostic.vim" as diag
 import "./completion.vim" as comp
 
 def SetLocal()
-  set completeopt=menu,menuone,popuphidden
-  setlocal omnifunc=comp.OmniLsp
+# these options should be selected by the user
+#     set completeopt=menu,menuone,popuphidden
+    setlocal omnifunc=comp.OmniLsp
 enddef
 
 def Maps()
