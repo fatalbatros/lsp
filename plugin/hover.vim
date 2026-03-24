@@ -21,7 +21,7 @@ const popup_options = {
 
 
 export def HoverOrPreview() 
-   if hover_id != -1 && !empty(popup_getpos(hover_id))
+    if hover_id != -1 && !empty(popup_getpos(hover_id))
         popup_close(hover_id)
         HoverPreview()
     else
@@ -30,17 +30,19 @@ export def HoverOrPreview()
 enddef
 
 def Hover()
-  sync.ForceSync()
-  const hover = {
-     'method': 'textDocument/hover',
-     'params': {
-     'textDocument': {'uri': 'file://' .. expand("%:p") },
-     'position': {'line': getpos('.')[1] - 1,
-        'character': charcol('.') - 1,
-      }
-     }
-   }
-  call ch_sendexpr(g:lsp[&filetype]['channel'], hover, {'callback': 'HoverCallback'})
+    sync.ForceSync()
+    const cursor = getpos('.')
+    const hover = {
+        'method': 'textDocument/hover',
+        'params': {
+            'textDocument': {'uri': 'file://' .. expand("%:p") },
+            'position': {
+                'line': cursor[1] - 1,
+                'character': cursor[2] - 1,
+            }
+        }
+    }
+    call ch_sendexpr(g:lsp[&filetype]['channel'], hover, {'callback': 'HoverCallback'})
 enddef
 
 def HoverCallback(channel: channel, response: dict<any>)
