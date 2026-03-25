@@ -1,7 +1,7 @@
 vim9script
 
 import "./sync.vim" as sync
-
+import "./utils.vim" as utils
 
 var last_hover: list<string> = []
 var hover_id = -1
@@ -32,10 +32,11 @@ enddef
 def Hover()
     sync.ForceSync()
     const cursor = getpos('.')
+    const uri = utils.GetCurrentUri()
     const hover = {
         'method': 'textDocument/hover',
         'params': {
-            'textDocument': {'uri': 'file://' .. expand("%:p") },
+            'textDocument': {'uri': uri },
             'position': {
                 'line': cursor[1] - 1,
                 'character': cursor[2] - 1,

@@ -1,8 +1,5 @@
 Im writing a lsp client in vim. The overall roadmap will be: hover, go to definition, diagnostics, completions.
-
-At the moment I will be testing with typescript lsp. The to "configure" a server just add to the g:lsp dictionary a new key "filetype": {cmd: 'command to run the server'}
-
-To "load" the client just source the source.vim file and call LspStart() from a file. 
+At the moment I will be testing with typescript lsp.  To "configure" a server just add to the g:lsp dictionary a new key "filetype": {cmd: 'command to run the server'}
 
 WARNING: Current state of the plugin is build to be added with packadd, so this repo should be cloned in /pack/name/opt/lsp/plugin. I dont know when I will be able to tidy up this.
 

@@ -157,9 +157,7 @@ def g:LspClean()
   var lista = []
   for bufer in bufers
     const n = bufer['bufnr']
-    echom n
     if getbufvar(n, '&filetype') == 'typescript'
-      echom "asde"
       call prop_clear(1, line('$'), {bufnr: n })
       # TODO: meter el filetype en el LspBuferAu, es mas facil limpiarlo.
       augroup LspBuferAu

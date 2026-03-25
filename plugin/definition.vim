@@ -1,14 +1,17 @@
 vim9script
 
 import "./sync.vim" as sync
+import "./utils.vim" as utils
 
 export def Definition()
     sync.ForceSync()
     const cursor = getpos('.')
+
+    var uri = utils.GetCurrentUri()
     var request = {
         'method': 'textDocument/definition',
         'params': {
-            'textDocument': {'uri': 'file://' .. expand("%:p")},
+            'textDocument': {'uri': uri},
             'position': {
                 'line': cursor[1] - 1,
                 'character': cursor[2] - 1,
@@ -18,20 +21,23 @@ export def Definition()
 
     # TODO: ch_eval espera la respuesta, se puede poner un timeout
     var response = ch_evalexpr(g:lsp[&filetype]['channel'], request, {})
-    if !has_key(response, 'result') || empty(response['result'])
-        echo "No response from LSP"
+    g:lps_definition_response = response
+    const result_raw = get(response, 'result', v:null)
+    if result_raw == v:null || empty(result_raw)
+        echo "LSP: No response for Definition"
         return
     endif
+
     var result = {}
 
-    # The response can be Location | Location[] | LocantionLink[]
-    if type(response['result']) == type([])
-        result = response['result'][0]
+    # The response can be Location | Location[] | LocationLink[]
+    if type(result_raw) == type([])
+        result = result_raw[0]
     else
-        result = response['result']
+        result = result_raw
     endif
 
-    var uri = ''
+    uri = ''
     var pos = {}
     if has_key(result, 'targetUri')
         uri = result['targetUri']
@@ -44,10 +50,6 @@ export def Definition()
     const line = pos['line'] + 1
     const character = pos['character'] + 1
 
-    execute(':edit ' .. fnameescape(Parse_uri(uri)))
-    setcursorcharpos(line, character) 
-enddef
-
-def Parse_uri(uri: string): string
-    return substitute(uri, '%\(\x\x\)', '\=printf("%c", str2nr(submatch(1), 16))', 'g')
+    execute(':edit ' .. utils.UriToPath(uri))
+    cursor(line, character) 
 enddef

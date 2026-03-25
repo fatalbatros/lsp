@@ -1,8 +1,10 @@
 vim9script
 
+import "./utils.vim" as utils
+
 export def DidClose(file: string)
-  var uri = 'file://' .. file
-  var didClose = {
+  const uri = utils.Path(file)
+  const didClose = {
     'method': 'textDocument/didClose',
     'params': {
       'textDocument': {
@@ -11,7 +13,7 @@ export def DidClose(file: string)
     },
   }
   
-  var filetype = g:synchronized[uri]['filetype']
+  const filetype = g:synchronized[uri]['filetype']
   ch_sendexpr(g:lsp[filetype]['channel'], didClose)
   unlet g:synchronized[uri]
   if has_key(g:diagnostics, uri)
@@ -20,20 +22,20 @@ export def DidClose(file: string)
 enddef
 
 
-def Get_lines():  string
-  var lines = getbufline(bufnr(), 1, '$')
+def GetLines():  string
+  const lines = getbufline(bufnr(), 1, '$')
   return join(lines, "\n")
 enddef
 
 def DidOpen(uri: string)
-  var didOpen = {
+  const didOpen = {
     'method': 'textDocument/didOpen',
     'params': {
       'textDocument': {
         'uri': uri,
         'languageId': &filetype, 
         'version': 1,
-        'text': Get_lines(),
+        'text': GetLines(),
       },
     },
   }
@@ -42,7 +44,7 @@ enddef
 
 
 def DidChange(uri: string, version: number)
-  var didChange = {
+  const didChange = {
     'method': 'textDocument/didChange',
     'params': {
       'textDocument': {
@@ -50,7 +52,7 @@ def DidChange(uri: string, version: number)
         'languageId': &filetype, 
         'version':  version,
       },
-      'contentChanges': [{'text': Get_lines() }],
+      'contentChanges': [{'text': GetLines() }],
     },
   }
   call ch_sendexpr(g:lsp[&filetype]['channel'], didChange)
@@ -58,7 +60,7 @@ enddef
 
 
 export def ForceSync()
-  var uri = 'file://' .. expand("%:p")
+  const uri = utils.GetCurrentUri()
   if !has_key(g:synchronized, uri)
     g:synchronized[uri] = {'bufer': bufnr(), 'version': 1, 'filetype': &filetype}
     b:sync_changedtick = b:changedtick
