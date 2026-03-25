@@ -69,7 +69,7 @@ export def ParseDiagnostics()
 
         var max_col = strlen(getline(line))
         if char > max_col
-            continue
+            char = max([1, max_col])
         endif
 
         var text = i.message
