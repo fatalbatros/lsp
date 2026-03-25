@@ -1,5 +1,7 @@
 vim9script
 
+import "./utils.vim" as utils
+
 var hiType = {
   'diagnosticError': 'ErrorMsg',
   'diagnosticErrorInline': 'ErrorMsg',
@@ -27,66 +29,82 @@ if empty(prop_type_get('diagnosticMark'))
   prop_type_add('diagnosticMark', {'priority': -1, 'override': v:false})
 endif
 
+def ClearDiagnostics() 
+    call prop_clear(1, line('$'), {'type': 'diagnosticError'})
+    call prop_clear(1, line('$'), {'type': 'diagnosticWarning'})
+    call prop_clear(1, line('$'), {'type': 'diagnosticErrorInline'})
+    call prop_clear(1, line('$'), {'type': 'diagnosticWarningInline'})
+    call prop_clear(1, line('$'), {'type': 'diagnosticMark'})
+enddef
 
 export def PublishDiagnosticsCB(params: dict<any>)
-  var uri = params['uri']
-  var file = matchstr(uri, 'file://\zs.*')
+  var uri = utils.ParseUri(params['uri'])
+  var file = utils.UriToPath(uri)
   if !file | return | endif
   if !bufexists(file) | return | endif
-  g:diagnostics[uri] = []
   g:diagnostics[uri] = params['diagnostics']
   ParseDiagnostics()
 enddef
 
 export def ParseDiagnostics()
-  if !g:show_diagnostic | return | endif
-  var uri = 'file://' .. expand("%:p")
-  if !has_key(g:diagnostics, uri)
-    return
-  endif
-  call prop_clear(1, line('$'))
-  b:diagnostics = g:diagnostics[uri]
-  b:diagnostic_text = {}
-
-  var idx = 1
-  for i in b:diagnostics
-    
-
-#     var type = 'diagnosticError'
-#     var pad = 0
-#     if i['severity'] != 1
-#       continue
-#     endif
-
-  # the pad is temporal to see first the error and then the warnings
-    var pad = 1
-    var type = 'diagnosticWarning'
-    if i['severity'] == 1
-      pad = 0
-      type = 'diagnosticError'
+    if !g:show_diagnostic | return | endif
+    const uri = utils.GetCurrentUri()
+    if !has_key(g:diagnostics, uri)
+        return
     endif
+    ClearDiagnostics()
+    b:diagnostics = g:diagnostics[uri]
+    b:diagnostic_text = {}
 
-    var line = i['range']['start']['line'] + 1
-    var char = i['range']['start']['character'] + 1
+    var seen = {}
+    var idx = 1
 
-    # this is to avoid trying to print in a line that does not exist anymore. 
-    var max_col = strlen(getline(line)) + 1
-    if char >= max_col
-      continue
-    endif
+    # I want to always have a mark for diagnostics but only show a line text  for
+    # diagnostics that have the most severity.
+    for i in b:diagnostics
+        var severity = get(i, 'severity', 1)
+        var type = severity == 1 ? 'diagnosticError' : 'diagnosticWarning'
+        var line = i.range.start.line + 1
+        var char = i.range.start.character + 1
 
-    var text = i['message']
-    var props = prop_list(line)
-    # This is for showing only a single message inline. 
-    # TODO: Be shure to show a high serverity error
-    if empty(props)
-        prop_add(line, 0, {'type': type, 'text': text, 'text_align': 'right', 'text_wrap': 'truncate'})
-    endif
-    prop_add(line, char + pad, {'type': type .. 'Inline' })
-    prop_add(line, char + pad, {'type': 'diagnosticMark', 'id': idx })
-    b:diagnostic_text[idx] = {'text': text, 'highlight': hiType[type] }
-    idx += 1
-  endfor
+        var max_col = strlen(getline(line))
+        if char > max_col
+            continue
+        endif
+
+        var text = i.message
+
+        prop_add(line, char, {
+            'type': 'diagnosticMark',
+            'id': idx
+        })
+
+        b:diagnostic_text[idx] = {
+            'text': text,
+            'highlight': hiType[type]
+        }
+
+        idx += 1
+
+        if has_key(seen, line) && seen[line] <= severity | continue | endif
+        seen[line] = severity
+
+        var props = prop_list(line, {'types': ['diagnosticError', 'diagnosticWarning']})
+        if empty(props)
+            prop_add(line, 0, {
+                'type': type,
+                'text': text,
+                'text_align': 'right',
+                'text_wrap': 'truncate'
+            })
+        endif
+
+        prop_add(line, char, {
+            'type': type .. 'Inline',
+            'priority': severity == 1 ? 100 : 50
+        })
+
+    endfor
 enddef
 
 export def NextDiagnostic()
@@ -121,7 +139,7 @@ def ShowDiagnostic(diagnostic: dict<any>)
   var id = diagnostic['id']
   var text = b:diagnostic_text[id]['text']
   var hi = b:diagnostic_text[id]['highlight']
-  setcursorcharpos(line, col) 
+  cursor(line, col) 
   var options = {
     'pos': 'topleft',
     'borderhighlight': ['LineNr'],
@@ -132,4 +150,3 @@ def ShowDiagnostic(diagnostic: dict<any>)
   }
   popup_atcursor(text, options)
 enddef
-  
