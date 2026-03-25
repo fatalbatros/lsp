@@ -62,7 +62,7 @@ var capabilities = {
       'insertReplaceSupport': v:false,
       'contextSupport': v:false,
     },
-    'syncrhonization': {
+    'synchronization': {
       'dynamicRegistration': v:false,
       'willSaveWaitUntil': v:false,
       'willSave': v:false,
@@ -77,7 +77,6 @@ var capabilities = {
     },
   },
 }
-
 
 def g:LspStart()
   # start and restart the server
@@ -106,10 +105,15 @@ def g:LspStart()
   var job_id = job_start(cmd, opt)
   g:lsp[&filetype]['job_id'] = job_id
   g:lsp[&filetype]['channel'] = job_getchannel(job_id)
-  g:synchronized = {}
-  g:diagnostics = {}
-  g:show_diagnostic = v:true
-  LspInit()
+
+    if !exists('g:diagnostics')
+        g:diagnostics = {}
+    endif
+    if !exists('g:lsp_synchronized')
+        g:lsp_synchronized = {}
+    endif
+    g:show_diagnostic = v:true
+    LspInit()
 enddef
 
 def g:LspStop()
@@ -143,7 +147,7 @@ enddef
 
 def LspExit(job_id: job, exit_code: number)
   var buf = bufnr('%')
-  bufdo call prop_clear(1, line('$'))
+  bufdo call diag.ClearDiagnostics()
   execute 'buffer ' .. buf
   augroup LspBuferAu
     autocmd! * <buffer>
@@ -152,19 +156,20 @@ def LspExit(job_id: job, exit_code: number)
   # TODO: This removes all autocomans and all diagnostics for all buffers. Change this to bufer specifics to the lsp  
 enddef
 
-def g:LspClean() 
-  const bufers = getbufinfo({buflisted: 1, bufloaded: 1})
-  var lista = []
-  for bufer in bufers
-    const n = bufer['bufnr']
-    if getbufvar(n, '&filetype') == 'typescript'
-      call prop_clear(1, line('$'), {bufnr: n })
-      # TODO: meter el filetype en el LspBuferAu, es mas facil limpiarlo.
-      augroup LspBuferAu
-        autocmd! * <buffer=n>
-      augroup END
-    endif
-  endfor
+def g:LspClean(filetype: string) 
+    const bufers = getbufinfo({buflisted: 1, bufloaded: 1})
+    var lista = []
+    for bufer in bufers
+        const n = bufer['bufnr']
+
+        if getbufvar(n, '&filetype') != filetype | continue | endif
+
+        diag.ClearDiagnostics() 
+        augroup LspBuferAu
+            autocmd! * <buffer=n>
+        augroup END
+        endif
+    endfor
 enddef
 
 def LspInit()

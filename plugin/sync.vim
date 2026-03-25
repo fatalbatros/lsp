@@ -13,9 +13,9 @@ export def DidClose(file: string)
     },
   }
   
-  const filetype = g:synchronized[uri]['filetype']
+  const filetype = g:lsp_synchronized[uri]['filetype']
   ch_sendexpr(g:lsp[filetype]['channel'], didClose)
-  unlet g:synchronized[uri]
+  unlet g:lsp_synchronized[uri]
   if has_key(g:diagnostics, uri)
     unlet g:diagnostics[uri] 
   endif
@@ -61,14 +61,14 @@ enddef
 
 export def ForceSync()
   const uri = utils.GetCurrentUri()
-  if !has_key(g:synchronized, uri)
-    g:synchronized[uri] = {'bufer': bufnr(), 'version': 1, 'filetype': &filetype}
+  if !has_key(g:lsp_synchronized, uri)
+    g:lsp_synchronized[uri] = {'bufer': bufnr(), 'version': 1, 'filetype': &filetype}
     b:sync_changedtick = b:changedtick
     DidOpen(uri)
   else
     if b:sync_changedtick != b:changedtick
-      var new_version = g:synchronized[uri]['version'] + 1
-      g:synchronized[uri]['version'] = new_version
+      var new_version = g:lsp_synchronized[uri]['version'] + 1
+      g:lsp_synchronized[uri]['version'] = new_version
       b:sync_changedtick = b:changedtick
       DidChange(uri, new_version)
     endif

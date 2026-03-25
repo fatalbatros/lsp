@@ -29,7 +29,7 @@ if empty(prop_type_get('diagnosticMark'))
   prop_type_add('diagnosticMark', {'priority': -1, 'override': v:false})
 endif
 
-def ClearDiagnostics() 
+export def ClearDiagnostics() 
     call prop_clear(1, line('$'), {'type': 'diagnosticError'})
     call prop_clear(1, line('$'), {'type': 'diagnosticWarning'})
     call prop_clear(1, line('$'), {'type': 'diagnosticErrorInline'})
