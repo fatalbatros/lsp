@@ -1,7 +1,7 @@
 vim9script
 
-import "./sync.vim" as sync
-import "./utils.vim" as utils
+import autoload "sync.vim" as sync
+import autoload "utils.vim" as utils
 
 var last_hover: list<string> = []
 var hover_id = -1
@@ -19,7 +19,6 @@ const popup_options = {
     'callback': function('OnHoverClose')
 }
 
-
 export def HoverOrPreview() 
     if hover_id != -1 && !empty(popup_getpos(hover_id))
         popup_close(hover_id)
@@ -33,7 +32,7 @@ def Hover()
     sync.ForceSync()
     const cursor = getpos('.')
     const uri = utils.GetCurrentUri()
-    const hover = {
+    var request = {
         'method': 'textDocument/hover',
         'params': {
             'textDocument': {'uri': uri },
@@ -43,11 +42,12 @@ def Hover()
             }
         }
     }
-    call ch_sendexpr(g:lsp[&filetype]['channel'], hover, {'callback': 'HoverCallback'})
+    const status = ch_sendexpr(g:lsp[&filetype]['channel'], request, {'callback': 'HoverCallback'})
+    g:lsp_request = request
 enddef
 
 def HoverCallback(channel: channel, response: dict<any>)
-    g:lsp_hover_response = response
+    g:lsp_response = response
     if response['result'] == v:null | return | endif
     if response['result']['contents'] == v:null | return | endif
 
@@ -55,6 +55,7 @@ def HoverCallback(channel: channel, response: dict<any>)
     if empty(lines) | return | endif
     last_hover = lines
 
+    if hover_id != -1 | popup_close(hover_id) | endif
     const id = popup_create(lines, popup_options)
     hover_id = id
 

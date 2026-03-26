@@ -1,6 +1,6 @@
 vim9script
 
-import "./utils.vim" as utils
+import autoload "utils.vim" as utils
 
 var hiType = {
   'diagnosticError': 'ErrorMsg',

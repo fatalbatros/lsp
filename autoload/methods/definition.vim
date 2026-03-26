@@ -1,7 +1,8 @@
 vim9script
 
-import "./sync.vim" as sync
-import "./utils.vim" as utils
+import autoload "sync.vim" as sync
+import autoload "utils.vim" as utils
+
 
 export def Definition()
     sync.ForceSync()
@@ -19,9 +20,13 @@ export def Definition()
         }
     }
 
-    # TODO: ch_eval espera la respuesta, se puede poner un timeout
-    var response = ch_evalexpr(g:lsp[&filetype]['channel'], request, {})
-    g:lps_definition_response = response
+    g:lsp_request = request
+    ch_sendexpr(g:lsp[&filetype]['channel'], request, {'callback': 'DefinitionCallback'})
+enddef
+
+def DefinitionCallback(channel: channel, response: dict<any>)
+    g:lsp_response = response
+
     const result_raw = get(response, 'result', v:null)
     if result_raw == v:null || empty(result_raw)
         echo "LSP: No response for Definition"
@@ -37,7 +42,7 @@ export def Definition()
         result = result_raw
     endif
 
-    uri = ''
+    var uri = ''
     var pos = {}
     if has_key(result, 'targetUri')
         uri = result['targetUri']
@@ -50,6 +55,6 @@ export def Definition()
     const line = pos['line'] + 1
     const character = pos['character'] + 1
 
-    execute(':edit ' .. utils.UriToPath(uri))
+    execute(':edit ' .. fnameescape(utils.UriToPath(uri)))
     cursor(line, character) 
 enddef
