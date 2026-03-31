@@ -2,6 +2,7 @@ vim9script
 
 import autoload "sync.vim" as sync
 import autoload "utils.vim" as utils
+import autoload "lsp/request.vim" as Request
 
 
 export def Definition()
@@ -19,9 +20,9 @@ export def Definition()
             }
         }
     }
-
     g:lsp_request = request
-    ch_sendexpr(g:lsp[&filetype]['channel'], request, {'callback': 'DefinitionCallback'})
+
+    Request.Send(&filetype, request, {'callback': (ch, res) => DefinitionCallback(ch, res) })
 enddef
 
 def DefinitionCallback(channel: channel, response: dict<any>)

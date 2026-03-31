@@ -1,9 +1,9 @@
 vim9script 
 
-import autoload "workspace/edit.vim" as edit
-
 import autoload "sync.vim" as sync
 import autoload "utils.vim" as utils
+import autoload "lsp/request.vim" as Request
+import autoload "workspace/edit.vim" as edit
 
 
 export def Rename()
@@ -22,12 +22,12 @@ export def Rename()
             'newName': newName
         }
     }
-
     g:lsp_request = request
-    ch_sendexpr(g:lsp[&filetype]['channel'], request, {'callback': 'RenameCB'})
+
+    Request.Send(&filetype, request, {'callback': (ch, res) => RenameCallback(ch, res) })
 enddef
 
-def RenameCB(channel: channel, response: dict<any>)
+def RenameCallback(channel: channel, response: dict<any>)
     g:lsp_response = response
 
     const result = get(response, 'result', v:null)

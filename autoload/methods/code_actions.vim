@@ -5,6 +5,7 @@ import autoload "workspace/edit.vim" as edit_actions
 import autoload "sync.vim" as sync
 import autoload "utils.vim" as utils
 import autoload "diagnostic.vim" as diag
+import autoload "lsp/request.vim" as Request
 
 var code_actions = []
 var show_preview = v:false
@@ -39,9 +40,9 @@ export def CodeActions()
             }
         }
     }
-
-    const status = ch_sendexpr(g:lsp[&filetype]['channel'], request, {'callback': 'CodeActionsCB'})
     g:lsp_request = request
+
+    Request.Send(&filetype, request, {'callback': (ch, res) => CodeActionsCB(ch, res) })
 enddef
 
 def CodeActionsCB(channel: channel, response: dict<any>)

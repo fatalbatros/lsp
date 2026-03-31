@@ -61,6 +61,7 @@ def CleanLocal()
     const nr = bufnr()
     if !getbufvar(nr, 'lsp_attached', v:false) | return | endif
     setbufvar(nr, 'lsp_attached', v:false) 
+    diag.ClearDiagnostics()
     
     UnSetLocal()
 enddef
@@ -100,7 +101,7 @@ export def ClearFiletype(filetype: string)
             continue
         endif
 
-        sync.DidClose(utils.PathToUri(buf.name))
+        sync.UnSyncUri(utils.PathToUri(buf.name))
 
         if nr == current 
             CleanLocal()

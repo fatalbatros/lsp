@@ -2,6 +2,7 @@ vim9script
 
 import autoload "sync.vim" as sync
 import autoload "utils.vim" as utils
+import autoload "lsp/request.vim" as Request
 
 var last_cursor_context = {}
 var last_completion_request = {}
@@ -65,7 +66,8 @@ def Completion()
         'method': 'textDocument/completion',
         'params': params,
     }
-    const status = ch_sendexpr(g:lsp[&filetype]['channel'], request, {'callback': 'OnComplete'})
+    const status = Request.Send(&filetype, request, {'callback': (ch, res) => HoverCallback(ch, res) })
+
     last_cursor_context = cursor_context
     last_completion_request = {'id': status.id, 'params': params }
     g:lsp_request = request

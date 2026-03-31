@@ -1,5 +1,5 @@
 vim9script
-import autoload "lsp.vim" as lsp
+import autoload "lsp/client.vim" as client
 
 # Configuration 
 if !exists("g:lsp")
@@ -23,6 +23,5 @@ if !exists("g:lsp")
 endif
 
 # Entry points
-command! LspStart call lsp.LspStart()
-command! LspClose call lsp.LspClose()
-command! LspClean call lsp.LspClean()
+command! LspStart call client.Start()
+command! LspStop call client.Stop()

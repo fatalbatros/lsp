@@ -2,6 +2,7 @@ vim9script
 
 import autoload "sync.vim" as sync
 import autoload "utils.vim" as utils
+import autoload "lsp/request.vim" as Request
 
 var last_hover: list<string> = []
 var hover_id = -1
@@ -42,8 +43,9 @@ def Hover()
             }
         }
     }
-    const status = ch_sendexpr(g:lsp[&filetype]['channel'], request, {'callback': 'HoverCallback'})
     g:lsp_request = request
+
+    Request.Send(&filetype, request, {'callback': (ch, res) => HoverCallback(ch, res) })
 enddef
 
 def HoverCallback(channel: channel, response: dict<any>)

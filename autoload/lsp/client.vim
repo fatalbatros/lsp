@@ -2,6 +2,7 @@ vim9script
 import autoload "diagnostic.vim" as diag
 import autoload "utils.vim" as utils
 import autoload "setup.vim" as setup
+import autoload "lsp/request.vim" as Request
 
 # Configuration 
 if !exists("g:lsp")
@@ -48,15 +49,27 @@ def OnStdout(channel: channel, data: dict<any>)
 enddef
 
 
-# This is called when the lsp server stops by any reason
-# TODO: Hacer esto bien. Esto es muy disruptivo
 def OnStdExit(job_id: job, exit_code: number)
-  var buf = bufnr('%')
-  bufdo call diag.ClearDiagnostics()
-  execute 'buffer ' .. buf
-  augroup LspBuferAu
-    autocmd! * <buffer>
-  augroup END
+    var filetype = ''
+
+    for [key, item] in items(g:lsp)
+        var job_stored = get(item, 'job_id', '')
+
+        job_id != job_stored
+            continue
+        endif
+
+        filetype = key
+        break
+    endfor
+
+    if filetype == '' | return | endif
+
+    setup.ClearFiletype(filetype)
+
+    unlet g:lsp[filetype]['job_id']
+    unlet g:lsp[filetype]['channel']
+    unlet g:lsp[filetype]['initialized']
 enddef
 
 var capabilities = {
@@ -88,7 +101,7 @@ var capabilities = {
     'general': { 'positionEncodings': ['utf-16'] }
 }
 
-export def LspStart()
+export def Start()
     const filetype = &filetype
     # start and restart the server
     if !has_key(g:lsp, filetype)
@@ -142,14 +155,15 @@ def LspInit(filetype: string)
     }
     g:lsp_request = request
     g:lsp[filetype]['root'] = rootPath
-    ch_sendexpr(g:lsp[filetype]['channel'], request, {'callback': (ch, res) => InitCallback(ch, res, filetype) })
+    Request.Send(filetype, request, {'callback': (ch, res) => InitCallback(ch, res, filetype)})
 enddef
 
+# TODO: capabilities are overwriten by other servers
 def InitCallback(channel: channel, response: dict<any>, filetype: string)
     g:lsp_response = response
     if has_key(response, 'result') && has_key(response['result'], 'capabilities')
         g:capabilities = response['result']['capabilities']
-        ch_sendexpr(channel, {'method': 'initialized', 'params': {}})
+        Request.Send(filetype, {'method': 'initialized', 'params': {}})
         g:lsp[filetype]['initialized'] = v:true
         utils.EchoOk('lsp initialized for ' .. filetype)
         setup.SetupFiletype(filetype)
@@ -159,28 +173,10 @@ def InitCallback(channel: channel, response: dict<any>, filetype: string)
 enddef
 
 
-export def LspStop()
+export def Stop()
   if has_key(g:lsp, &filetype) && has_key(g:lsp[&filetype], 'job_id')
     job_stop(g:lsp[&filetype]['job_id'])
-    unlet g:lsp[&filetype]['job_id']
-    unlet g:lsp[&filetype]['channel']
   else
     utils.EchoError('Lsp server for ' .. &filetype .. ' not found')
   endif
-enddef
-
-export def LspClean(filetype: string) 
-    const bufers = getbufinfo({buflisted: 1, bufloaded: 1})
-    var lista = []
-    for bufer in bufers
-        const n = bufer['bufnr']
-
-        if getbufvar(n, '&filetype') != filetype | continue | endif
-
-        diag.ClearDiagnostics() 
-        augroup LspBuferAu
-            autocmd! * <buffer=n>
-        augroup END
-        endif
-    endfor
 enddef

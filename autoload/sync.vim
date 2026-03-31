@@ -1,11 +1,12 @@
 vim9script
 
 import autoload "utils.vim" as utils
+import autoload "lsp/request.vim" as Request
 
 export def DidClose(uri: string)
     if !has_key(g:lsp_synchronized, uri) | return | endif
 
-    const didClose = {
+    const request = {
         'method': 'textDocument/didClose',
         'params': {
             'textDocument': {
@@ -15,23 +16,14 @@ export def DidClose(uri: string)
     }
   
     const filetype = g:lsp_synchronized[uri]['filetype']
-    ch_sendexpr(g:lsp[filetype]['channel'], didClose)
-
-    const bufnr = g:lsp_synchronized[uri]['buffer']
-    setbufvar(bufnr, 'diagnostics', v:null)
-    setbufvar(bufnr, 'sync_changedtick', v:null)
-
-    unlet g:lsp_synchronized[uri]
-    if has_key(g:diagnostics, uri)
-        unlet g:diagnostics[uri] 
-    endif
+    Request.Send(filetype, request)
 enddef
 
 
 
 def DidOpen(uri: string)
     const filetype = g:lsp_synchronized[uri]['filetype']
-    const didOpen = {
+    const request = {
         'method': 'textDocument/didOpen',
         'params': {
             'textDocument': {
@@ -42,13 +34,13 @@ def DidOpen(uri: string)
             },
         },
     }
-    ch_sendexpr(g:lsp[filetype]['channel'], didOpen)
+    Request.Send(filetype, request)
 enddef
 
 
 def DidChange(uri: string, version: number)
     var filetype = g:lsp_synchronized[uri]['filetype']
-    const didChange = {
+    const request = {
         'method': 'textDocument/didChange',
             'params': {
                 'textDocument': {
@@ -58,7 +50,7 @@ def DidChange(uri: string, version: number)
             'contentChanges': [{'text': utils.GetLines(uri) }],
         },
     }
-    ch_sendexpr(g:lsp[filetype]['channel'], didChange)
+    Request.Send(filetype, request)
 enddef
 
 
@@ -84,5 +76,28 @@ export def ForceSyncUri(uri: string)
         g:lsp_synchronized[uri]['version'] = new_version
         setbufvar(bufnr, 'sync_changedtick', changedtick)
         DidChange(uri, new_version)
+    endif
+enddef
+
+export def UnSyncUri(uri: string)
+    if !has_key(g:lsp_synchronized, uri) | return | endif
+    const filetype = g:lsp_synchronized[uri]['filetype']
+    
+    const job = get(g:lsp[filetype], 'job_id', v:null)
+
+    if job != v:null && ch_status(job) == 'open'
+        DidClose(uri)
+    endif
+
+    const bufnr = g:lsp_synchronized[uri]['buffer']
+
+    if bufexists(bufnr)
+        setbufvar(bufnr, 'diagnostics', v:null)
+        setbufvar(bufnr, 'sync_changedtick', v:null)
+    endif
+
+    unlet g:lsp_synchronized[uri]
+    if has_key(g:diagnostics, uri)
+        unlet g:diagnostics[uri] 
     endif
 enddef
