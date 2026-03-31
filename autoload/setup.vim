@@ -22,7 +22,6 @@ def SetLocalMaps()
   nnoremap <silent><buffer> [d <Cmd>call <SID>diag.PreviousDiagnostic()<CR>
   nnoremap <silent><buffer> <F2> <Cmd>call <SID>rename.Rename()<CR>
   nnoremap <silent><buffer> <F3> <Cmd>call <SID>actions.CodeActions()<CR>
-   nnoremap <silent><buffer> <F4> <Cmd>call <SID>typeDef.TypeDefinition()<CR>
 enddef
 
 def SetLocalAu()

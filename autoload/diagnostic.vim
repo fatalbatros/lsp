@@ -4,25 +4,15 @@ import autoload "utils.vim" as utils
 
 var hiType = {
   'diagnosticError': 'ErrorMsg',
-  'diagnosticErrorInline': 'ErrorMsg',
   'diagnosticWarning': 'WarningMsg',
-  'diagnosticWarningInline': 'WarningMsg',
 }
 
 if empty(prop_type_get('diagnosticError'))
   prop_type_add('diagnosticError', {'highlight': hiType['diagnosticError']})
 endif
 
-if empty(prop_type_get('diagnosticErrorInline'))
-  prop_type_add('diagnosticErrorInline', { 'override': v:false})
-endif
-
 if empty(prop_type_get('diagnosticWarning'))
   prop_type_add('diagnosticWarning', {'highlight': hiType['diagnosticWarning']})
-endif
-
-if empty(prop_type_get('diagnosticWarningInline'))
-  prop_type_add('diagnosticWarningInline', { 'override': v:false})
 endif
 
 if empty(prop_type_get('diagnosticMark'))
@@ -32,8 +22,6 @@ endif
 export def ClearDiagnostics() 
     call prop_clear(1, line('$'), {'type': 'diagnosticError'})
     call prop_clear(1, line('$'), {'type': 'diagnosticWarning'})
-    call prop_clear(1, line('$'), {'type': 'diagnosticErrorInline'})
-    call prop_clear(1, line('$'), {'type': 'diagnosticWarningInline'})
     call prop_clear(1, line('$'), {'type': 'diagnosticMark'})
 enddef
 
@@ -89,64 +77,64 @@ export def ParseDiagnostics()
         if has_key(seen, line) && seen[line] <= severity | continue | endif
         seen[line] = severity
 
-        var props = prop_list(line, {'types': ['diagnosticError', 'diagnosticWarning']})
-        if empty(props)
-            prop_add(line, 0, {
-                'type': type,
-                'text': text,
-                'text_align': 'right',
-                'text_wrap': 'truncate'
-            })
-        endif
-
-        prop_add(line, char, {
-            'type': type .. 'Inline',
-            'priority': severity == 1 ? 100 : 50
+        prop_remove({types: ['diagnosticError', 'diagnosticWarning']}, line )
+        prop_add(line, 0, {
+            'type': type,
+            'text': text,
+            'text_align': 'right',
+            'text_wrap': 'truncate'
         })
-
     endfor
 enddef
 
 export def NextDiagnostic()
-  var diag = prop_find({'type': 'diagnosticMark', 'skipstart': v:true}, "f")
-  if empty(diag) 
-    diag = prop_find({'type': 'diagnosticMark', 'skipstart': v:false, 'lnum': 1, 'col': 1}, "f")
-    if empty(diag)
-      echo "No more diagnostics"
-      return
+    var diag = prop_find({'type': 'diagnosticMark', 'skipstart': v:true}, "f")
+    if !empty(diag) 
+        ShowDiagnostic(diag)
+        return
     endif
-  endif
-  call ShowDiagnostic(diag)
+
+    diag = prop_find({'type': 'diagnosticMark', 'skipstart': v:false, 'lnum': 1, 'col': 1}, "f")
+    if !empty(diag) 
+        ShowDiagnostic(diag)
+        return
+    endif
+
+    echo "No more diagnostics"
 enddef
 
 export def PreviousDiagnostic()
-  var diag = prop_find({'type': 'diagnosticMark', 'skipstart': v:true}, "b")
-  if empty(diag) 
+    var diag = prop_find({'type': 'diagnosticMark', 'skipstart': v:true}, "b")
+    if !empty(diag)
+        ShowDiagnostic(diag)
+        return
+    endif
+
     var line = getpos('$')[1]
     var col = getpos('$')[2]
     diag = prop_find({'type': 'diagnosticMark', 'skipstart': v:false, 'lnum': line, 'col': col}, "b")
-    if empty(diag)
-      echo "No more diagnostics"
-      return
+    if !empty(diag)
+        ShowDiagnostic(diag)
+        return
     endif
-  endif
-  ShowDiagnostic(diag)
+
+    echo "No more diagnostics"
 enddef
 
 def ShowDiagnostic(diagnostic: dict<any>)
-  var line = diagnostic['lnum']
-  var col = diagnostic['col']
-  var id = diagnostic['id']
-  var text = b:diagnostic_text[id]['text']
-  var hi = b:diagnostic_text[id]['highlight']
-  cursor(line, col) 
-  var options = {
-    'pos': 'topleft',
-    'borderhighlight': ['LineNr'],
-    'highlight': hi,
-    'moved': 'any',
-    'border': [1, 1, 1, 1],
-    'borderchars': ['─', '│', '─', '│', '┌', '┐', '┘', '└'], 
-  }
-  popup_atcursor(text, options)
+    var line = diagnostic['lnum']
+    var col = diagnostic['col']
+    var id = diagnostic['id']
+    var text = b:diagnostic_text[id]['text']
+    var hi = b:diagnostic_text[id]['highlight']
+    cursor(line, col) 
+    var options = {
+        'pos': 'topleft',
+        'borderhighlight': ['LineNr'],
+        'highlight': hi,
+        'moved': 'any',
+        'border': [1, 1, 1, 1],
+        'borderchars': ['─', '│', '─', '│', '┌', '┐', '┘', '└'], 
+    }
+    popup_atcursor(text, options)
 enddef

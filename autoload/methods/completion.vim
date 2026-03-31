@@ -98,7 +98,6 @@ def OnComplete(channel: channel, response: dict<any>)
         var label = trim(i['label'])
         var kind = get(i, 'kind', 0)
         var kind_text = get(completion__kinds, kind, '')
-        var score = label =~? '^' .. base ? 0 : 1
 
         var item = {
             'word': label,
