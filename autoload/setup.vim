@@ -10,22 +10,18 @@ import autoload "methods/completion.vim" as comp
 import autoload "methods/rename.vim" as rename
 import autoload "methods/code_actions.vim" as actions
 
-def SetLocalOptions()
+def SetLocal()
     setlocal omnifunc=comp.OmniLsp
-enddef
 
-def SetLocalMaps()
-  nnoremap <silent><buffer> K <Cmd>call <SID>hov.HoverOrPreview()<CR>
-  nnoremap <silent><buffer> gd <Cmd>call <SID>def.Definition()<CR>
-  nnoremap <silent><buffer> <space>w <Cmd>call <SID>sync.ForceSync()<CR>
-  nnoremap <silent><buffer> ]d <Cmd>call <SID>diag.NextDiagnostic()<CR>
-  nnoremap <silent><buffer> [d <Cmd>call <SID>diag.PreviousDiagnostic()<CR>
-  nnoremap <silent><buffer> <F2> <Cmd>call <SID>rename.Rename()<CR>
-  nnoremap <silent><buffer> <F3> <Cmd>call <SID>actions.CodeActions()<CR>
-enddef
+    nnoremap <silent><buffer> K <Cmd>call <SID>hov.HoverOrPreview()<CR>
+    nnoremap <silent><buffer> gd <Cmd>call <SID>def.Definition()<CR>
+    nnoremap <silent><buffer> <space>w <Cmd>call <SID>sync.ForceSync()<CR>
+    nnoremap <silent><buffer> ]d <Cmd>call <SID>diag.NextDiagnostic()<CR>
+    nnoremap <silent><buffer> [d <Cmd>call <SID>diag.PreviousDiagnostic()<CR>
+    nnoremap <silent><buffer> <F2> <Cmd>call <SID>rename.Rename()<CR>
+    nnoremap <silent><buffer> <F3> <Cmd>call <SID>actions.CodeActions()<CR>
 
-def SetLocalAu()
-    augroup LspBuferAu
+    augroup LspBufferAu
         autocmd! * <buffer>
         au bufdelete <buffer> call <SID>sync.DidClose(utils.PathToUri(expand('<afile>:p')))
         au bufenter <buffer> call <SID>diag.ParseDiagnostics()
@@ -36,16 +32,39 @@ def SetLocalAu()
     augroup END
 enddef
 
+def UnSetLocal()
+    setlocal omnifunc&
+
+    silent! nunmap <buffer> K
+    silent! nunmap <buffer> gd
+    silent! nunmap <buffer> <space>w
+    silent! nunmap <buffer> ]d
+    silent! nunmap <buffer> [d
+    silent! nunmap <buffer> <F2>
+    silent! nunmap <buffer> <F3>
+
+    augroup LspBufferAu
+        autocmd! * <buffer>
+    augroup END
+enddef
+
 
 def SetupLocal() 
     const nr = bufnr()
     if getbufvar(nr, 'lsp_attached', v:false) | return | endif
     setbufvar(nr, 'lsp_attached', v:true) 
     
-    SetLocalOptions()
-    SetLocalAu()
-    SetLocalMaps()
+    SetLocal()
 enddef
+
+def CleanLocal()
+    const nr = bufnr()
+    if !getbufvar(nr, 'lsp_attached', v:false) | return | endif
+    setbufvar(nr, 'lsp_attached', v:false) 
+    
+    UnSetLocal()
+enddef
+
 
 export def SetupFiletype(filetype: string) 
     const current = bufnr()
@@ -66,7 +85,32 @@ export def SetupFiletype(filetype: string)
         execute 'au bufenter <buffer=' .. nr .. '> ++once call SetupLocal()'
     endfor
 
-    augroup LspAttach
+    execute 'augroup LspAttach_' .. filetype
+        execute 'au!'
         execute 'au filetype ' .. filetype .. ' call SetupLocal()'
-    augroup END
+    execute 'augroup END'
+enddef
+
+export def ClearFiletype(filetype: string) 
+    const current = bufnr()
+
+    for buf in getbufinfo()
+        var nr = buf.bufnr
+        if getbufvar(nr, '&filetype', '') != filetype
+            continue
+        endif
+
+        sync.DidClose(utils.PathToUri(buf.name))
+
+        if nr == current 
+            CleanLocal()
+            continue
+        endif
+
+        execute 'au bufenter <buffer=' .. nr .. '> ++once call CleanLocal()'
+    endfor
+
+    execute 'augroup LspAttach_' .. filetype
+        execute 'au!'
+    execute 'augroup END'
 enddef
