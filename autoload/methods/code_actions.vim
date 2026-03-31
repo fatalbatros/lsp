@@ -2,7 +2,7 @@ vim9script
 
 import autoload "workspace/edit.vim" as edit_actions
 
-import autoload "sync.vim" as sync
+import autoload "lsp/sync.vim" as sync
 import autoload "utils.vim" as utils
 import autoload "diagnostic.vim" as diag
 import autoload "lsp/request.vim" as Request

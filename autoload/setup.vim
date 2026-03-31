@@ -1,6 +1,6 @@
 vim9script
 
-import autoload "sync.vim" as sync
+import autoload "lsp/sync.vim" as sync
 import autoload "diagnostic.vim" as diag
 import autoload "utils.vim" as utils
 

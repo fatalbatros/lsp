@@ -1,6 +1,6 @@
 vim9script
 
-import autoload "sync.vim" as sync
+import autoload "lsp/sync.vim" as sync
 import autoload "utils.vim" as utils
 import autoload "lsp/request.vim" as Request
 
