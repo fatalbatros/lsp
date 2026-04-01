@@ -61,6 +61,7 @@ def CodeActionsCB(channel: channel, response: dict<any>)
         add(list, to_add)
     endfor
     
+    if empty(list) | return | endif
     code_actions = list
     ShowActions()
 enddef

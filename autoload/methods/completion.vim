@@ -66,7 +66,7 @@ def Completion()
         'method': 'textDocument/completion',
         'params': params,
     }
-    const status = Request.Send(&filetype, request, {'callback': (ch, res) => HoverCallback(ch, res) })
+    const status = Request.Send(&filetype, request, {'callback': (ch, res) => OnComplete(ch, res) })
 
     last_cursor_context = cursor_context
     last_completion_request = {'id': status.id, 'params': params }
