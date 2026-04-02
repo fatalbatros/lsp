@@ -44,8 +44,6 @@ vim9script
 export def NormalizeCodeActionResult(result: list<dict<any>>): list<dict<any>>
     var list = []
     for codeAction in result
-        echom "CA codeAction"
-        echom codeAction
         
         var changes: dict<any> = {}
         var title = get(codeAction, 'title', v:null)

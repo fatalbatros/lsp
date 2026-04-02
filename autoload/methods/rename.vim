@@ -37,7 +37,8 @@ enddef
 
 def Filter(id: number, key: string, result: dict<any>): bool
     if key == "\<CR>"
-        edit.ApplyEdit(result)
+        const changes = result.changes
+        edit.ApplyChanges(changes)
         popup_close(id)
     else
         popup_close(id)

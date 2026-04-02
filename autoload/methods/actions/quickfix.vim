@@ -6,7 +6,7 @@ import autoload "lsp/sync.vim" as sync
 import autoload "utils.vim" as utils
 import autoload "diagnostic.vim" as diag
 import autoload "lsp/request.vim" as Request
-import autoload "methods/actions/code_actions.vim" as CA
+import autoload "methods/actions/utils.vim" as ActionsUtils
 
 var code_actions = []
 var show_preview = v:false
@@ -51,7 +51,7 @@ def QuickFixCB(channel: channel, response: dict<any>)
     g:lsp_response = response
     const result = get(response, 'result', v:null)
     if result == v:null | return | endif
-    const normalized = CA.NormalizeCodeActionResult(result)
+    const normalized = ActionsUtils.NormalizeCodeActionResult(result)
 
     var list = []
     for action in normalized 
@@ -97,7 +97,8 @@ def FilterQf(id: number, key: string): bool
     var action = code_actions[id_line]
 
     if key == "\<CR>"
-        edit_actions.ApplyEdit(action)
+        const changes = action.changes
+        edit_actions.ApplyChanges(changes)
         popup_close(id)
         return true
     endif

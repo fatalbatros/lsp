@@ -3,15 +3,14 @@ vim9script
 import autoload "lsp/sync.vim" as sync
 import autoload "utils.vim" as utils
 
-#The input was normalized to {title, kind, changes}
-export def ApplyEdit(edit: dict<any>) 
+# changes ussually comes in from changes: {[uri: ]: TextEdit[]}. When not, I
+# format the other possible options to behave like this
+export def ApplyChanges(change: dict<any>) 
     const changes = edit.changes
     for [uri, list]  in items(changes)
-        SingleFileEdit(uri, list)
-#         sync.ForceSyncUri(uri)
+        AppyArrayTextEdit(uri, list)
     endfor
 enddef
-
 
 def SortEdits(a: dict<any>, b: dict<any>): number
     if a.range.start.line != b.range.start.line
@@ -20,40 +19,53 @@ def SortEdits(a: dict<any>, b: dict<any>): number
     return b.range.start.character - a.range.start.character
 enddef
 
+# Apply to a single file and array of TextEdit.
+export def ApplyArrayTextEdit(uri: string, list: list<dict<any>>)
+    var sorted = sort(list, SortEdits)
+    for textEdit in sorted
+        ApplyTextEdit(uri, textEdit)
+    endfor
+    sync.ForceSyncUri(uri)
+enddef
 
-def SingleFileEdit(uri: string, list: list<dict<any>>)
+# Apply a single TextEdit: { range: Range, newText: string}
+def ApplyTextEdit(uri: string, textEdit: dict<any>)
     const bufnr = utils.EnsureBuffer(uri)
 
-    var sorted = sort(list, SortEdits)
+    const start = textEdit.range.start
+    const end = textEdit.range.end
 
-    for i in sorted
-        const start = i.range.start
-        const end = i.range.end
-        var newLines = split(i.newText, '\n', 1)
+    const start_lnum = start.line + 1
+    const end_lnum = end.line + 1
 
-        const start_lnum = start.line + 1
-        const end_lnum = end.line + 1
+    const start_line = getbufline(bufnr, start_lnum)[0]
 
-        const start_line = getbufline(bufnr, start_lnum)[0]
+    const text_before = strpart(start_line, 0, start.character)
+
+    var text_after = ''
+    if end.character > 0
         const end_line = getbufline(bufnr, end_lnum)[0]
+        text_after = strpart(end_line, end.character)
+    endif
 
-        const text_before = strpart(start_line, 0, start.character)
-        const text_after = strpart(end_line, end.character)
+    var newLines = split(textEdit.newText, '\n', 1)
 
-        newLines[0] = text_before .. newLines[0]
-        newLines[-1] = newLines[-1] .. text_after
+    newLines[0] = text_before .. newLines[0]
+    newLines[-1] = newLines[-1] .. text_after
 
-        if end_lnum > start_lnum
-            keepjumps keepmarks noautocmd deletebufline(bufnr, start_lnum + 1, end_lnum)
+    if end_lnum > start_lnum
+        if end.character == 0
+            deletebufline(bufnr, start_lnum + 1, end_lnum - 1)
+        else
+            deletebufline(bufnr, start_lnum + 1, end_lnum)
         endif
+    endif
 
-        keepjumps keepmarks noautocmd setbufline(bufnr, start_lnum, newLines[0])
+    keepjumps keepmarks noautocmd setbufline(bufnr, start_lnum, newLines[0])
 
-        if len(newLines) > 1
-            keepjumps keepmarks noautocmd appendbufline(bufnr, start_lnum, newLines[1 : ])
-        endif
-    endfor
-
+    if len(newLines) > 1
+        keepjumps keepmarks noautocmd appendbufline(bufnr, start_lnum, newLines[1 : ])
+    endif
 enddef
 
 
@@ -67,16 +79,21 @@ export def SingleFileDiff(uri: string, list: list<dict<any>>): string
     for i in sorted
         const start = i.range.start
         const end = i.range.end
-        var newLines = split(i.newText, '\n', 1)
 
         const start_lnum = start.line + 1
         const end_lnum = end.line + 1
 
         const start_line = getbufline(bufnr, start_lnum)[0]
-        const end_line = getbufline(bufnr, end_lnum)[0]
 
         const text_before = strpart(start_line, 0, start.character)
-        const text_after = strpart(end_line, end.character)
+
+        var text_after = ''
+        if end.character > 0
+            const end_line = getbufline(bufnr, end_lnum)[0]
+            text_after = strpart(end_line, end.character)
+        endif
+
+        var newLines = split(i.newText, '\n', 1)
 
         newLines[0] = text_before .. newLines[0]
         newLines[-1] = newLines[-1] .. text_after
