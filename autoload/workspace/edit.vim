@@ -3,31 +3,13 @@ vim9script
 import autoload "lsp/sync.vim" as sync
 import autoload "utils.vim" as utils
 
+#The input was normalized to {title, kind, changes}
 export def ApplyEdit(edit: dict<any>) 
-    # edit = WorkSpaceEdit  {
-    #   changes?: {uri, textEdit[]},
-    #   documentChanges?: TextDocumentEdit[] | (TextDocumentEdit | CreateFile | RenameFile | DeleteFile )[]
-    # }
-    g:edit = edit
-    const changes = get(edit, 'changes', v:null)
-    if changes != v:null
-        for [uri, list]  in items(changes)
-            SingleFileEdit(uri, list)
-            sync.ForceSyncUri(uri)
-        endfor
-        return
-    endif
-
-    const documentChanges = get(edit, 'documentChanges', v:null)
-    if documentChanges != v:null
-        for  textDocumentEdit in documentChanges
-            var uri = textDocumentEdit.textDocument.uri
-            var list = textDocumentEdit.edits
-            SingleFileEdit(uri, list)
-            sync.ForceSyncUri(uri)
-        endfor
-        return
-    endif
+    const changes = edit.changes
+    for [uri, list]  in items(changes)
+        SingleFileEdit(uri, list)
+        sync.ForceSyncUri(uri)
+    endfor
 enddef
 
 
@@ -73,7 +55,6 @@ def SingleFileEdit(uri: string, list: list<dict<any>>)
     endfor
 
 enddef
-
 
 
 export def SingleFileDiff(uri: string, list: list<dict<any>>): string

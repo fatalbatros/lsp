@@ -6,6 +6,7 @@ import autoload "lsp/sync.vim" as sync
 import autoload "utils.vim" as utils
 import autoload "diagnostic.vim" as diag
 import autoload "lsp/request.vim" as Request
+import autoload "methods/actions/code_actions.vim" as CA
 
 var code_actions = []
 var show_preview = v:false
@@ -50,18 +51,14 @@ def QuickFixCB(channel: channel, response: dict<any>)
     g:lsp_response = response
     const result = get(response, 'result', v:null)
     if result == v:null | return | endif
+    const normalized = CA.NormalizeCodeActionResult(result)
 
     var list = []
-    for action in result 
-         if get(action, 'kind', '') !~# '^quickfix' | continue | endif
-        var edit = get(action, 'edit', v:null)
-        if edit == v:null | continue | endif
-        var to_add = {'edit': edit, 'title': action.title, 'kind': action.kind }
+    for action in normalized 
+        if action.kind !~# '^quickfix' | continue | endif
 
-        # this only works if the server sends two edits that are the same edit
-        # in the same exact order of it keys.
-        if index(list, to_add) != -1 | continue | endif
-        add(list, to_add)
+        if index(list, action) != -1 | continue | endif
+        add(list, action)
     endfor
     
     if empty(list) | return | endif
@@ -100,7 +97,7 @@ def FilterQf(id: number, key: string): bool
     var action = code_actions[id_line]
 
     if key == "\<CR>"
-        edit_actions.ApplyEdit(action.edit)
+        edit_actions.ApplyEdit(action)
         popup_close(id)
         return true
     endif
@@ -128,7 +125,7 @@ def ShowQfPreview(action: dict<any>)
 
     CleanPreview()
 
-    for [uri, edits] in items(action.edit.changes)
+    for [uri, edits] in items(action.changes)
         var diff = edit_actions.SingleFileDiff(uri, edits)
         echom diff
     endfor
