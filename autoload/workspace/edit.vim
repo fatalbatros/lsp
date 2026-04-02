@@ -8,7 +8,7 @@ export def ApplyEdit(edit: dict<any>)
     const changes = edit.changes
     for [uri, list]  in items(changes)
         SingleFileEdit(uri, list)
-        sync.ForceSyncUri(uri)
+#         sync.ForceSyncUri(uri)
     endfor
 enddef
 
@@ -44,13 +44,13 @@ def SingleFileEdit(uri: string, list: list<dict<any>>)
         newLines[-1] = newLines[-1] .. text_after
 
         if end_lnum > start_lnum
-            deletebufline(bufnr, start_lnum + 1, end_lnum)
+            keepjumps keepmarks noautocmd deletebufline(bufnr, start_lnum + 1, end_lnum)
         endif
 
-        setbufline(bufnr, start_lnum, newLines[0])
+        keepjumps keepmarks noautocmd setbufline(bufnr, start_lnum, newLines[0])
 
         if len(newLines) > 1
-            appendbufline(bufnr, start_lnum, newLines[1 : ])
+            keepjumps keepmarks noautocmd appendbufline(bufnr, start_lnum, newLines[1 : ])
         endif
     endfor
 
