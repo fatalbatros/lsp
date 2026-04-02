@@ -121,6 +121,17 @@ export def PreviousDiagnostic()
     echo "No more diagnostics"
 enddef
 
+export def GetLineDiagnostics(): list<dict<any>>
+    var list: list<dict<any>> = []
+    const line = line('.')
+
+    for diag in b:diagnostics
+        if diag.range.start.line + 1 == line | add(list, diag) | endif
+    endfor
+    return list
+enddef
+
+
 def ShowDiagnostic(diagnostic: dict<any>)
     var line = diagnostic['lnum']
     var col = diagnostic['col']

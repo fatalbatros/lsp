@@ -8,7 +8,7 @@ import autoload "methods/hover.vim" as hov
 import autoload "methods/definition.vim" as def
 import autoload "methods/completion.vim" as comp
 import autoload "methods/rename.vim" as rename
-import autoload "methods/code_actions.vim" as actions
+import autoload "methods/actions/quickfix.vim" as qf
 
 def SetLocal()
     setlocal omnifunc=comp.OmniLsp
@@ -19,7 +19,7 @@ def SetLocal()
     nnoremap <silent><buffer> ]d <Cmd>call <SID>diag.NextDiagnostic()<CR>
     nnoremap <silent><buffer> [d <Cmd>call <SID>diag.PreviousDiagnostic()<CR>
     nnoremap <silent><buffer> <F2> <Cmd>call <SID>rename.Rename()<CR>
-    nnoremap <silent><buffer> <F3> <Cmd>call <SID>actions.CodeActions()<CR>
+    nnoremap <silent><buffer> <F3> <Cmd>call <SID>qf.QuickFix()<CR>
 
     augroup LspBufferAu
         autocmd! * <buffer>
