@@ -33,11 +33,13 @@ def ApplyTextEdit(uri: string, textEdit: dict<any>)
 
     const start = textEdit.range.start
     const start_lnum = start.line + 1
-    const start_line = getbufline(bufnr, start_lnum)[0]
+    const start_lines = getbufline(bufnr, start_lnum)
+    const start_line = len(start_lines) > 0 ? start_lines[0] : ''
 
     const end = textEdit.range.end
-    const end_lnum   = end.line + 1
-    const end_line   = getbufline(bufnr, end_lnum)[0]
+    const end_lnum  = end.line + 1
+    const end_lines = getbufline(bufnr, end_lnum)
+    const end_line = len(end_lines) > 0 ? end_lines[0] : ''
 
     const prefix = strpart(start_line, 0, start.character)
     const suffix = strpart(end_line, end.character)
@@ -69,11 +71,13 @@ export def SingleFileDiff(uri: string, list: list<dict<any>>): string
     for i in sorted
         const start = i.range.start
         const start_lnum = start.line + 1
-        const start_line = getbufline(bufnr, start_lnum)[0]
+        const start_lines = getbufline(bufnr, start_lnum)
+        const start_line = len(start_lines) > 0 ? start_lines[0] : ''
 
         const end = i.range.end
-        const end_lnum   = end.line + 1
-        const end_line   = getbufline(bufnr, end_lnum)[0]
+        const end_lnum  = end.line + 1
+        const end_lines = getbufline(bufnr, end_lnum)
+        const end_line = len(end_lines) > 0 ? end_lines[0] : ''
 
         const prefix = strpart(start_line, 0, start.character)
         const suffix = strpart(end_line, end.character)
