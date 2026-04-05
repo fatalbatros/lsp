@@ -9,7 +9,6 @@ import autoload "methods/definition.vim" as def
 import autoload "methods/completion.vim" as comp
 import autoload "methods/rename.vim" as rename
 import autoload "methods/actions/quickfix.vim" as qf
-import autoload "methods/actions/organize.vim" as org
 import autoload "methods/actions/format.vim" as fmt
 
 
@@ -23,8 +22,6 @@ def SetLocal()
     nnoremap <silent><buffer> [d <Cmd>call <SID>diag.PreviousDiagnostic()<CR>
     nnoremap <silent><buffer> <F2> <Cmd>call <SID>rename.Rename()<CR>
     nnoremap <silent><buffer> <F3> <Cmd>call <SID>qf.QuickFix()<CR>
-#     nnoremap <silent><buffer> <F4> <Cmd>call <SID>org.OrganizeImports()<CR>
-    nnoremap <silent><buffer> <F4> <Cmd>call <SID>fmt.Format()<CR>
 
     augroup LspBufferAu
         autocmd! * <buffer>
@@ -36,9 +33,7 @@ def SetLocal()
         au textchanged <buffer> call <SID>sync.ForceSync()  
     augroup END
 
-    command! -buffer Fmt {
-        echo "FMT"
-    }
+    command! -buffer Fmt call <SID>fmt.Fmt()
 enddef
 
 def UnSetLocal()
