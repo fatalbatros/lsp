@@ -55,7 +55,7 @@ def OnStdExit(job_id: job, exit_code: number)
     for [key, item] in items(g:lsp)
         var job_stored = get(item, 'job_id', '')
 
-        job_id != job_stored
+        if job_id != job_stored
             continue
         endif
 
