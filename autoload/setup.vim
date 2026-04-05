@@ -35,6 +35,10 @@ def SetLocal()
         au insertleave <buffer> call <SID>sync.ForceSync()  
         au textchanged <buffer> call <SID>sync.ForceSync()  
     augroup END
+
+    command! -buffer Fmt {
+        echo "FMT"
+    }
 enddef
 
 def UnSetLocal()
@@ -51,6 +55,8 @@ def UnSetLocal()
     augroup LspBufferAu
         autocmd! * <buffer>
     augroup END
+
+    delcommand -buffer Fmt
 enddef
 
 
