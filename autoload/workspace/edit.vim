@@ -5,10 +5,9 @@ import autoload "utils.vim" as utils
 
 # changes ussually comes in from changes: {[uri: ]: TextEdit[]}. When not, I
 # format the other possible options to behave like this
-export def ApplyChanges(change: dict<any>) 
-    const changes = edit.changes
+export def ApplyChanges(changes: dict<any>) 
     for [uri, list]  in items(changes)
-        AppyArrayTextEdit(uri, list)
+        ApplyArrayTextEdit(uri, list)
     endfor
 enddef
 
@@ -33,35 +32,26 @@ def ApplyTextEdit(uri: string, textEdit: dict<any>)
     const bufnr = utils.EnsureBuffer(uri)
 
     const start = textEdit.range.start
-    const end = textEdit.range.end
-
     const start_lnum = start.line + 1
-    const end_lnum = end.line + 1
-
     const start_line = getbufline(bufnr, start_lnum)[0]
 
-    const text_before = strpart(start_line, 0, start.character)
+    const end = textEdit.range.end
+    const end_lnum   = end.line + 1
+    const end_line   = getbufline(bufnr, end_lnum)[0]
 
-    var text_after = ''
-    if end.character > 0
-        const end_line = getbufline(bufnr, end_lnum)[0]
-        text_after = strpart(end_line, end.character)
-    endif
+    const prefix = strpart(start_line, 0, start.character)
+    const suffix = strpart(end_line, end.character)
 
     var newLines = split(textEdit.newText, '\n', 1)
 
-    newLines[0] = text_before .. newLines[0]
-    newLines[-1] = newLines[-1] .. text_after
-
-    if end_lnum > start_lnum
-        if end.character == 0
-            deletebufline(bufnr, start_lnum + 1, end_lnum - 1)
-        else
-            deletebufline(bufnr, start_lnum + 1, end_lnum)
-        endif
-    endif
+    newLines[0] = prefix .. newLines[0]
+    newLines[-1] = newLines[-1] .. suffix
 
     keepjumps keepmarks noautocmd setbufline(bufnr, start_lnum, newLines[0])
+
+    if end_lnum > start_lnum
+        deletebufline(bufnr, start_lnum + 1, end_lnum)
+    endif
 
     if len(newLines) > 1
         keepjumps keepmarks noautocmd appendbufline(bufnr, start_lnum, newLines[1 : ])
@@ -78,25 +68,20 @@ export def SingleFileDiff(uri: string, list: list<dict<any>>): string
 
     for i in sorted
         const start = i.range.start
-        const end = i.range.end
-
         const start_lnum = start.line + 1
-        const end_lnum = end.line + 1
-
         const start_line = getbufline(bufnr, start_lnum)[0]
 
-        const text_before = strpart(start_line, 0, start.character)
+        const end = i.range.end
+        const end_lnum   = end.line + 1
+        const end_line   = getbufline(bufnr, end_lnum)[0]
 
-        var text_after = ''
-        if end.character > 0
-            const end_line = getbufline(bufnr, end_lnum)[0]
-            text_after = strpart(end_line, end.character)
-        endif
+        const prefix = strpart(start_line, 0, start.character)
+        const suffix = strpart(end_line, end.character)
 
         var newLines = split(i.newText, '\n', 1)
 
-        newLines[0] = text_before .. newLines[0]
-        newLines[-1] = newLines[-1] .. text_after
+        newLines[0] = prefix .. newLines[0]
+        newLines[-1] = newLines[-1] .. suffix
 
         
         lines = lines[ : start.line - 1] + newLines + lines[end.line + 1 :]
