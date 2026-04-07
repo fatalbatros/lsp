@@ -6,6 +6,7 @@ import autoload "utils.vim" as utils
 
 import autoload "methods/hover.vim" as hov
 import autoload "methods/definition.vim" as def
+import autoload "methods/references.vim" as ref
 import autoload "methods/completion.vim" as comp
 import autoload "methods/rename.vim" as rename
 import autoload "methods/actions/quickfix.vim" as qf
@@ -22,6 +23,7 @@ def SetLocal()
     nnoremap <silent><buffer> [d <Cmd>call <SID>diag.PreviousDiagnostic()<CR>
     nnoremap <silent><buffer> <F2> <Cmd>call <SID>rename.Rename()<CR>
     nnoremap <silent><buffer> <F3> <Cmd>call <SID>qf.QuickFix()<CR>
+    nnoremap <silent><buffer> <F4> <Cmd>call <SID>ref.References()<CR>
 
     augroup LspBufferAu
         autocmd! * <buffer>
@@ -46,6 +48,7 @@ def UnSetLocal()
     silent! nunmap <buffer> [d
     silent! nunmap <buffer> <F2>
     silent! nunmap <buffer> <F3>
+    silent! nunmap <buffer> <F4>
 
     augroup LspBufferAu
         autocmd! * <buffer>
