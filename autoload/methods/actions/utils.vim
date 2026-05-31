@@ -69,11 +69,11 @@ export def NormalizeCodeActionResult(result: list<dict<any>>): list<dict<any>>
             var uri = get(textDocumentEdit.textDocument, 'uri', v:null)
             if uri == v:null | continue | endif
 
-            var edits = textDocumentEdit.edits
-            changes[uri] = edits
-
-            add(list, {'title': title, 'kind': kind, 'changes': changes})
+            changes[uri] = textDocumentEdit.edits
         endfor
+        if !empty(changes)
+            add(list, {'title': title, 'kind': kind, 'changes': changes})
+        endif
     endfor
 
     return list

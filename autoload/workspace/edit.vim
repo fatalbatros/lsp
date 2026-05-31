@@ -59,36 +59,3 @@ def ApplyTextEdit(uri: string, textEdit: dict<any>)
         keepjumps keepmarks noautocmd appendbufline(bufnr, start_lnum, newLines[1 : ])
     endif
 enddef
-
-
-export def SingleFileDiff(uri: string, list: list<dict<any>>): string
-    const bufnr = utils.EnsureBuffer(uri)
-    var sorted = sort(list, SortEdits)
-
-    var lines = getbufline(bufnr, 1, "$")
-    const oldLines = copy(lines)
-
-    for i in sorted
-        const start = i.range.start
-        const start_lnum = start.line + 1
-        const start_lines = getbufline(bufnr, start_lnum)
-        const start_line = len(start_lines) > 0 ? start_lines[0] : ''
-
-        const end = i.range.end
-        const end_lnum  = end.line + 1
-        const end_lines = getbufline(bufnr, end_lnum)
-        const end_line = len(end_lines) > 0 ? end_lines[0] : ''
-
-        const prefix = strpart(start_line, 0, start.character)
-        const suffix = strpart(end_line, end.character)
-
-        var newLines = split(i.newText, '\n', 1)
-
-        newLines[0] = prefix .. newLines[0]
-        newLines[-1] = newLines[-1] .. suffix
-
-        
-        lines = lines[ : start.line - 1] + newLines + lines[end.line + 1 :]
-    endfor
-    return diff(oldLines, lines)
-enddef

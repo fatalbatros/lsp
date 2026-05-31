@@ -78,11 +78,8 @@ def OnComplete(channel: channel, response: dict<any>)
     g:lsp_response = response
     if response.id != last_completion_request.id | return | endif
 
-    const result = get(response, 'result', v:null)
-    if result == v:null
-        echom 'LSP: Completion null response'
-        return
-    endif
+    const result = utils.GetResult(response)
+    if result == v:null | return | endif
 
     var data_list = [] 
     if type(result) == type({})     | data_list = result['items']

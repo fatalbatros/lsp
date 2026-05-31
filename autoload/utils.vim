@@ -59,6 +59,14 @@ export def FindRootDir(start: string, filetype: string): string
 enddef
 
 
+export def GetResult(response: dict<any>): any
+    if has_key(response, 'error')
+        EchoError('LSP error: ' .. get(response.error, 'message', 'unknown'))
+        return v:null
+    endif
+    return get(response, 'result', v:null)
+enddef
+
 export def EchoOk(message: string)
     echohl Added
     echo message

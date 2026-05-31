@@ -50,10 +50,11 @@ enddef
 
 def HoverCallback(channel: channel, response: dict<any>)
     g:lsp_response = response
-    if response['result'] == v:null | return | endif
-    if response['result']['contents'] == v:null | return | endif
+    const result = utils.GetResult(response)
+    if result == v:null | return | endif
+    if result['contents'] == v:null | return | endif
 
-    const lines = Parse_hover_response(response.result.contents)
+    const lines = Parse_hover_response(result.contents)
     if empty(lines) | return | endif
     last_hover = lines
 

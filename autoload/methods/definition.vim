@@ -28,7 +28,7 @@ enddef
 def DefinitionCallback(channel: channel, response: dict<any>)
     g:lsp_response = response
 
-    const result_raw = get(response, 'result', v:null)
+    const result_raw = utils.GetResult(response)
     if result_raw == v:null || empty(result_raw)
         echo "LSP: No response for Definition"
         return

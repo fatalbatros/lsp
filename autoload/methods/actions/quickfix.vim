@@ -9,16 +9,6 @@ import autoload "lsp/request.vim" as Request
 import autoload "methods/actions/utils.vim" as ActionsUtils
 
 var code_actions = []
-var show_preview = v:false
-
-
-if empty(prop_type_get('LspDiffVirtualAdd'))
-    prop_type_add('LspDiffVirtualAdd', { highlight: 'Added', priority: -10 })
-endif
-
-if empty(prop_type_get('LspDiffVirtualDelete'))
-    prop_type_add('LspDiffVirtualDelete', { highlight: 'MatchParen',   priority: -10})
-endif
 
 export def QuickFix()
     sync.ForceSync()
@@ -49,7 +39,7 @@ enddef
 
 def QuickFixCB(channel: channel, response: dict<any>)
     g:lsp_response = response
-    const result = get(response, 'result', v:null)
+    const result = utils.GetResult(response)
     if result == v:null | return | endif
     const normalized = ActionsUtils.NormalizeCodeActionResult(result)
 
@@ -80,13 +70,9 @@ def ShowQfActions()
         border: [1, 1, 1, 1],
         highlight: 'Normal',
         borderhighlight: ['LineNr'],
-        borderchars: ['─', '│', '─', '│', '┌', '┐', '┘', '└'], 
+        borderchars: ['─', '│', '─', '│', '┌', '┐', '┘', '└'],
         filter: FilterQf,
-        callback: (id, result) => {
-            show_preview = v:false
-            CleanPreview()
-            diag.ParseDiagnostics()
-        }
+        callback: (id, result) => diag.ParseDiagnostics()
     }
 
     popup_menu(lines, options)
@@ -103,60 +89,11 @@ def FilterQf(id: number, key: string): bool
         return true
     endif
 
-    if key == 'p'
-        show_preview = v:true
-        ShowQfPreview(action)
-        return true
-    endif
-
     if (key == 'j' || key == 'k' || key == "\<Down>" || key == "\<Up>")
-        var handled = popup_filter_menu(id, key)
-        id_line = line('.', id) - 1
-        action = code_actions[id_line]
-        ShowQfPreview(action)
-        return handled
+        return popup_filter_menu(id, key)
     endif
 
     popup_close(id)
     return false
 enddef
 
-def ShowQfPreview(action: dict<any>)
-    if show_preview == v:false | return | endif
-
-    CleanPreview()
-
-    for [uri, edits] in items(action.changes)
-        var diff = edit_actions.SingleFileDiff(uri, edits)
-        echom diff
-    endfor
-enddef
-
-
-def CleanPreview()
-    prop_clear(1, line('$'), {'type': 'LspDiffVirtualAdd'})
-    prop_clear(1, line('$'), {'type': 'LspDiffVirtualDelete'})
-enddef 
-
-
-#         for e in edits
-#             var lnum = e.range.start.line + 1
-#             var diff = ComputeSingleDiff(uri, e)
-#             var diff_line = split(diff, '\n')
-#             for l in diff_line
-#                 if l[0] == '-'
-#                     prop_add(lnum, 0, {
-#                         type: 'LspDiffVirtualDelete',
-#                         text: l,
-#                         text_align: 'above'
-#                     })
-# 
-#                 elseif l[0] == '+'
-#                     prop_add(lnum,  0, {
-#                         type: 'LspDiffVirtualAdd',
-#                         text: l,
-#                         text_align: 'above'
-#                     })
-#                 endif
-#             endfor
-#         endfor

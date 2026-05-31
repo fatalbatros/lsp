@@ -30,7 +30,7 @@ enddef
 def RenameCallback(channel: channel, response: dict<any>)
     g:lsp_response = response
 
-    const result = get(response, 'result', v:null)
+    const result = utils.GetResult(response)
     if result == v:null | return | endif
     ShowRenamePopup(result)    
 enddef

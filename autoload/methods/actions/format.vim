@@ -36,7 +36,7 @@ enddef
 
 def OrganizeImportsCB(channel: channel, response: dict<any>)
     g:lsp_response = response
-    const result = get(response, 'result', v:null)
+    const result = utils.GetResult(response)
     if result == v:null | return | endif
     const normalized = ActionsUtils.NormalizeCodeActionResult(result)
 
@@ -81,7 +81,7 @@ enddef
 
 def FormatCB(channel: channel, response: dict<any>, uri: string)
     g:lsp_response = response
-    const result = get(response, 'result', v:null)
+    const result = utils.GetResult(response)
     if result == v:null | return | endif
 
     Edit.ApplyArrayTextEdit(uri, result)

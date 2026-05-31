@@ -4,27 +4,6 @@ import autoload "utils.vim" as utils
 import autoload "setup.vim" as setup
 import autoload "lsp/request.vim" as Request
 
-# Configuration 
-if !exists("g:lsp")
-    g:lsp = {}
-    g:lsp['cairo'] = {
-        'cmd': ['scarb', 'cairo-language-server', '/C', '--node-ipc'],
-        'root_markers': [
-            {type: 'file', name: 'Scarb.toml', priority: 1},
-            {type: 'dir', name: '.git', priority: 10}, 
-        ]
-    }
-    g:lsp['typescript'] = {
-        'cmd': ['typescript-language-server', '--stdio'],
-        'root_markers': [
-            {type: 'file', name: 'tsconfig.json', priority: 1},
-            {type: 'file', name: 'jsconfig.json', priority: 3},
-            {type: 'file', name: 'package.json', priority: 4},
-            {type: 'dir',  name: '.git',          priority: 10},
-        ]
-    }
-endif
-
 var opt = {
 #   'err_cb': 'OnStderr',
   'exit_cb': 'OnStdExit',
@@ -39,12 +18,26 @@ def OnStderr(channel: channel, data: dict<any>)
 enddef
 
 
+var showMessageTypes = ['', 'Error', 'Warning', 'Info', 'Log']
+
 def OnStdout(channel: channel, data: dict<any>)
-  if has_key(data, 'method')
-    if data['method'] == 'textDocument/publishDiagnostics'
-      diag.PublishDiagnosticsCB(data['params'])
-      return
+  if !has_key(data, 'method') | return | endif
+
+  if data['method'] == 'textDocument/publishDiagnostics'
+    diag.PublishDiagnosticsCB(data['params'])
+
+  elseif data['method'] == 'window/showMessage'
+    const params = data['params']
+    const kind = get(showMessageTypes, get(params, 'type', 0), 'Info')
+    if kind == 'Error'
+      utils.EchoError('[LSP] ' .. params['message'])
+    else
+      utils.EchoOk('[LSP] ' .. params['message'])
     endif
+
+  elseif data['method'] == 'window/logMessage'
+    echom '[LSP] ' .. data['params']['message']
+
   endif
 enddef
 
@@ -149,7 +142,7 @@ def LspInit(filetype: string)
             'clientInfo': {'name': 'lsp-joel', 'version': '0'},
             'capabilities': capabilities,
             'rootPath': rootPath,
-            'rootURI': utils.PathToUri(rootPath),
+            'rootUri': utils.PathToUri(rootPath),
             'trace': 'off',
         },
     }
