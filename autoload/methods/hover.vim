@@ -3,22 +3,14 @@ vim9script
 import autoload "lsp/sync.vim" as sync
 import autoload "utils.vim" as utils
 import autoload "lsp/request.vim" as Request
+import autoload "ui.vim" as ui
 
 var last_hover: list<string> = []
 var hover_id = -1
 
-def OnHoverClose(id: number, _: any) 
+def OnHoverClose(id: number, _: any)
     hover_id = -1
 enddef
-
-const popup_options = {
-    'border': [1, 1, 1, 1],
-    'highlight': 'Normal',
-    'borderhighlight': ['LineNr'],
-     borderchars: ['─', '│', '─', '│', '┌', '┐', '┘', '└'], 
-    'moved': 'word',
-    'callback': function('OnHoverClose')
-}
 
 export def HoverOrPreview() 
     if hover_id != -1 && !empty(popup_getpos(hover_id))
@@ -59,7 +51,10 @@ def HoverCallback(channel: channel, response: dict<any>)
     last_hover = lines
 
     if hover_id != -1 | popup_close(hover_id) | endif
-    const id = popup_create(lines, popup_options)
+    var opts = ui.PopupOpts()
+    opts.moved = 'word'
+    opts.callback = function('OnHoverClose')
+    const id = popup_create(lines, opts)
     hover_id = id
 
     call win_execute(id, 'setlocal filetype=markdown')

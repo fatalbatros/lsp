@@ -7,6 +7,7 @@ import autoload "utils.vim" as utils
 import autoload "lsp/request.vim" as Request
 import autoload "methods/actions/utils.vim" as ActionsUtils
 import autoload "diagnostic.vim" as diag
+import autoload "ui.vim" as ui
 
 
 export def OrganizeImports()
@@ -93,15 +94,9 @@ export def Fmt()
         "Organize Imports",
         "Change tabsize"
     ]
-    var options = {
-        border: [1, 1, 1, 1],
-        highlight: 'Normal',
-        borderhighlight: ['LineNr'],
-        borderchars: ['─', '│', '─', '│', '┌', '┐', '┘', '└'], 
-        filter: FilterFmt,
-    }
-
-    popup_menu(lines, options)
+    var opts = ui.PopupOpts()
+    opts.filter = FilterFmt
+    popup_menu(lines, opts)
 enddef
 
 def FilterFmt(id: number, key: string): bool

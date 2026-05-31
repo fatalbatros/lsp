@@ -1,6 +1,7 @@
 vim9script
 
 import autoload "utils.vim" as utils
+import autoload "ui.vim" as ui
 
 var hiType = {
   'diagnosticError': 'ErrorMsg',
@@ -138,14 +139,10 @@ def ShowDiagnostic(diagnostic: dict<any>)
     var id = diagnostic['id']
     var text = b:diagnostic_text[id]['text']
     var hi = b:diagnostic_text[id]['highlight']
-    cursor(line, col) 
-    var options = {
-        'pos': 'topleft',
-        'borderhighlight': ['LineNr'],
-        'highlight': hi,
-        'moved': 'any',
-        'border': [1, 1, 1, 1],
-        'borderchars': ['─', '│', '─', '│', '┌', '┐', '┘', '└'], 
-    }
-    popup_atcursor(text, options)
+    cursor(line, col)
+    var opts = ui.PopupOpts()
+    opts.pos = 'topleft'
+    opts.highlight = hi
+    opts.moved = 'any'
+    popup_atcursor(text, opts)
 enddef

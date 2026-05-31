@@ -4,6 +4,7 @@ import autoload "lsp/sync.vim" as sync
 import autoload "utils.vim" as utils
 import autoload "lsp/request.vim" as Request
 import autoload "workspace/edit.vim" as edit
+import autoload "ui.vim" as ui
 
 
 export def Rename()
@@ -82,13 +83,7 @@ def ShowRenamePopup(result: dict<any>)
 
     if empty(lines) | return | endif
 
-    const options = {
-        border: [1, 1, 1, 1],
-        highlight: 'Normal',
-        borderhighlight: ['LineNr'],
-        borderchars: ['─', '│', '─', '│', '┌', '┐', '┘', '└'], 
-        filter: (id, key) => Filter(id, key, result),
-    }
-
-    popup_create(lines, options)
+    var opts = ui.PopupOpts()
+    opts.filter = (id, key) => Filter(id, key, result)
+    popup_create(lines, opts)
 enddef

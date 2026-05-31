@@ -7,6 +7,7 @@ import autoload "utils.vim" as utils
 import autoload "diagnostic.vim" as diag
 import autoload "lsp/request.vim" as Request
 import autoload "methods/actions/utils.vim" as ActionsUtils
+import autoload "ui.vim" as ui
 
 var code_actions = []
 
@@ -66,16 +67,10 @@ def ShowQfActions()
         add(lines, text)
     endfor
 
-    var options = {
-        border: [1, 1, 1, 1],
-        highlight: 'Normal',
-        borderhighlight: ['LineNr'],
-        borderchars: ['─', '│', '─', '│', '┌', '┐', '┘', '└'],
-        filter: FilterQf,
-        callback: (id, result) => diag.ParseDiagnostics()
-    }
-
-    popup_menu(lines, options)
+    var opts = ui.PopupOpts()
+    opts.filter = FilterQf
+    opts.callback = (id, result) => diag.ParseDiagnostics()
+    popup_menu(lines, opts)
 enddef
  
 def FilterQf(id: number, key: string): bool
