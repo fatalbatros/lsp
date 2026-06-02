@@ -56,6 +56,6 @@ def DefinitionCallback(channel: channel, response: dict<any>)
     const line = pos['line'] + 1
     const character = pos['character'] + 1
 
-    execute(':edit ' .. fnameescape(utils.UriToPath(uri)))
+    execute(':edit! ' .. fnameescape(utils.UriToPath(uri)))
     cursor(line, character) 
 enddef
