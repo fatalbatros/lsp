@@ -16,8 +16,14 @@ if !exists("g:lsp")
         'root_markers': [
             {type: 'file', name: 'tsconfig.json', priority: 1},
             {type: 'file', name: 'jsconfig.json', priority: 3},
-            {type: 'file', name: 'package.json', priority: 4},
+            {type: 'file', name: 'package.json',  priority: 4},
             {type: 'dir',  name: '.git',          priority: 10},
+        ]
+    }
+    g:lsp['sh'] = {
+        'cmd': ['bash-language-server', 'start'],
+        'root_markers': [
+            {type: 'dir', name: '.git', priority: 3},
         ]
     }
 endif
